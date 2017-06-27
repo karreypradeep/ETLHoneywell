@@ -21,6 +21,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.brilapps.etl.source.ProjectDefinitionRefereceTableExtractor;
 import com.brilapps.etl.target.NetworkHeaderGenerator;
 import com.brilapps.etl.target.ProjectDefinitionGenerator;
 import com.brilapps.etl.target.WBSGenerator;
@@ -29,14 +30,12 @@ public class ETLMainClass extends JFrame implements ActionListener {
 	static Logger logger = Logger.getLogger(ETLMainClass.class);
 
 	private static final long serialVersionUID = 7221908953707958694L;
-	private JTextField jTextField1, jTextField2, jTextField3, jTextField4;
-	private JButton jButton1, jButton2, jButton3, jButton4, jButton5, jButton6;
+	private JTextField projectDefinitionJTextField, wbsJTextField, networkHeaderJTextField, destinationFolderJTextField, referenceTableJTextField;
+	private JButton projectDefinitionJButton, wbsJButton, networkHeaderJButton, destinationFolderJButton, jButton5, jButton6, referenceTableButton;
 	private JFileChooser fileChooser;
-	private File projectDefinitionSourceFile;
-	private File wbsSourceFile;
-	private File networkHeaderSourceFile;
-	private File destinationFolder;
-	private File projectDefinitionDestinationFile;
+	private File projectDefinitionSourceFile, wbsSourceFile, networkHeaderSourceFile, destinationFolder,
+	projectDefinitionDestinationFile;
+	private File projectDefinitionReferenceTableFile;
 	JProgressBar progressBar;
 
 	public static void main(final String... d) throws FileNotFoundException {
@@ -62,111 +61,137 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		jLabel1.setBounds(10, 80, 300, 30);
 		add(jLabel1);
 
-		jTextField1 = new JTextField();
-		jTextField1.setBounds(250, 80, 400, 30);
-		add(jTextField1);
+		projectDefinitionJTextField = new JTextField();
+		projectDefinitionJTextField.setBounds(250, 80, 400, 30);
+		add(projectDefinitionJTextField);
 
-		jButton1 = new JButton("Browse");
-		jButton1.setBounds(750, 80, 80, 30);
-		add(jButton1);
-		jButton1.addActionListener(this);
+		projectDefinitionJButton = new JButton("Browse");
+		projectDefinitionJButton.setBounds(750, 80, 80, 30);
+		add(projectDefinitionJButton);
+		projectDefinitionJButton.addActionListener(this);
 
 		JLabel jLabel2 = new JLabel("WBS File");
 		jLabel2.setBounds(10, 160, 300, 30);
 		add(jLabel2);
 
-		jTextField2 = new JTextField();
-		jTextField2.setBounds(250, 160, 400, 30);
-		add(jTextField2);
+		wbsJTextField = new JTextField();
+		wbsJTextField.setBounds(250, 160, 400, 30);
+		add(wbsJTextField);
 
-		jButton2 = new JButton("Browse");
-		jButton2.setBounds(750, 160, 80, 30);
-		add(jButton2);
-		jButton2.addActionListener(this);
+		wbsJButton = new JButton("Browse");
+		wbsJButton.setBounds(750, 160, 80, 30);
+		add(wbsJButton);
+		wbsJButton.addActionListener(this);
 
 		JLabel jLabel3 = new JLabel("Network Header File");
 		jLabel3.setBounds(10, 240, 300, 30);
 		add(jLabel3);
 
-		jTextField3 = new JTextField();
-		jTextField3.setBounds(250, 240, 400, 30);
-		add(jTextField3);
+		networkHeaderJTextField = new JTextField();
+		networkHeaderJTextField.setBounds(250, 240, 400, 30);
+		add(networkHeaderJTextField);
 
-		jButton3 = new JButton("Browse");
-		jButton3.setBounds(750, 240, 80, 30);
-		add(jButton3);
-		jButton3.addActionListener(this);
+		networkHeaderJButton = new JButton("Browse");
+		networkHeaderJButton.setBounds(750, 240, 80, 30);
+		add(networkHeaderJButton);
+		networkHeaderJButton.addActionListener(this);
 
 		JLabel jLabel4 = new JLabel("Destination Folder");
 		jLabel4.setBounds(10, 320, 300, 30);
 		add(jLabel4);
 
-		jTextField4 = new JTextField();
-		jTextField4.setBounds(250, 320, 400, 30);
-		add(jTextField4);
+		destinationFolderJTextField = new JTextField();
+		destinationFolderJTextField.setBounds(250, 320, 400, 30);
+		add(destinationFolderJTextField);
 
-		jButton4 = new JButton("Browse");
-		jButton4.setBounds(750, 320, 80, 30);
-		add(jButton4);
-		jButton4.addActionListener(this);
+		destinationFolderJButton = new JButton("Browse");
+		destinationFolderJButton.setBounds(750, 320, 80, 30);
+		add(destinationFolderJButton);
+		destinationFolderJButton.addActionListener(this);
+
+		JLabel jLabel5 = new JLabel("Reference Table");
+		jLabel5.setBounds(10, 400, 300, 30);
+		add(jLabel5);
+
+		referenceTableJTextField = new JTextField();
+		referenceTableJTextField.setBounds(250, 400, 400, 30);
+		add(referenceTableJTextField);
+
+		referenceTableButton = new JButton("Browse");
+		referenceTableButton.setBounds(750, 400, 80, 30);
+		add(referenceTableButton);
+		referenceTableButton.addActionListener(this);
 
 		jButton5 = new JButton("Generate Target Files");
-		jButton5.setBounds(300, 400, 150, 30);
+		jButton5.setBounds(300, 480, 150, 30);
 		add(jButton5);
 		jButton5.addActionListener(this);
 
 		jButton6 = new JButton("Exit");
-		jButton6.setBounds(500, 400, 100, 30);
+		jButton6.setBounds(500, 480, 100, 30);
 		add(jButton6);
 		jButton6.addActionListener(this);
 
-		jTextField1.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
-		jTextField2.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
-		jTextField3.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
-		jTextField4.setText("C:/Users/pkarrey.ORADEV/Documents");
+		projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
+		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
+		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
+		destinationFolderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents");
+		referenceTableJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
 		projectDefinitionSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
 		wbsSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
 		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
 		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");
+		projectDefinitionReferenceTableFile = new File(
+				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
+
 
 	}
 
 	@Override
 	public void actionPerformed(final ActionEvent event) {
 		try {
-			if (event.getSource() == jButton1) {
+			if (event.getSource() == projectDefinitionJButton) {
 				FileFilter filter = new FileNameExtensionFilter("excel", "xls", "xlsx");
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setFileFilter(filter);
 				int x = fileChooser.showOpenDialog(null);
 				if (x == JFileChooser.APPROVE_OPTION) {
 					projectDefinitionSourceFile = fileChooser.getSelectedFile();
-					jTextField1.setText(projectDefinitionSourceFile.getAbsolutePath());
+					projectDefinitionJTextField.setText(projectDefinitionSourceFile.getAbsolutePath());
 				}
-			} else if (event.getSource() == jButton2) {
+			} else if (event.getSource() == wbsJButton) {
 				FileFilter filter = new FileNameExtensionFilter("excel", "xls", "xlsx");
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setFileFilter(filter);
 				int x = fileChooser.showOpenDialog(null);
 				if (x == JFileChooser.APPROVE_OPTION) {
 					wbsSourceFile = fileChooser.getSelectedFile();
-					jTextField2.setText(wbsSourceFile.getAbsolutePath());
+					wbsJTextField.setText(wbsSourceFile.getAbsolutePath());
 				}
-			} else if (event.getSource() == jButton3) {
+			} else if (event.getSource() == networkHeaderJButton) {
 				FileFilter filter = new FileNameExtensionFilter("excel", "xls", "xlsx");
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setFileFilter(filter);
 				int x = fileChooser.showOpenDialog(null);
 				if (x == JFileChooser.APPROVE_OPTION) {
 					networkHeaderSourceFile = fileChooser.getSelectedFile();
-					jTextField3.setText(networkHeaderSourceFile.getAbsolutePath());
+					networkHeaderJTextField.setText(networkHeaderSourceFile.getAbsolutePath());
 				}
-			} else if (event.getSource() == jButton4) {
+			} else if (event.getSource() == destinationFolderJButton) {
 				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				int x = fileChooser.showOpenDialog(null);
 				if (x == JFileChooser.APPROVE_OPTION) {
 					destinationFolder = fileChooser.getSelectedFile();
-					jTextField4.setText(destinationFolder.getAbsolutePath());
+					destinationFolderJTextField.setText(destinationFolder.getAbsolutePath());
+				}
+			} else if (event.getSource() == referenceTableButton) {
+				FileFilter filter = new FileNameExtensionFilter("excel", "xls", "xlsx");
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setFileFilter(filter);
+				int x = fileChooser.showOpenDialog(null);
+				if (x == JFileChooser.APPROVE_OPTION) {
+					projectDefinitionReferenceTableFile = fileChooser.getSelectedFile();
+					referenceTableJTextField.setText(projectDefinitionReferenceTableFile.getAbsolutePath());
 				}
 			} else if (event.getSource() == jButton5) {
 				convertFiles();
@@ -209,10 +234,21 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		jdialog.setVisible(true);
 		// jdialog.add(progressBar);
 		updateLog4jConfiguration();
+		extractProjectDefinitionRefereceTable();
 		generateProjectDefinitionFile();
 		generateWBSFile();
 		generateNetworkHeaderFile();
 		System.exit(0);
+	}
+
+	private void extractProjectDefinitionRefereceTable() {
+		try {
+			new ProjectDefinitionRefereceTableExtractor()
+			.extractProjectDefinitionRefereceTable(projectDefinitionReferenceTableFile);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			logger.error("Error : ", e);
+		}
 	}
 
 	private void generateProjectDefinitionFile() {

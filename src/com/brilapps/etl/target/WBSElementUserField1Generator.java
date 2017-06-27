@@ -7,10 +7,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import com.brilapps.etl.ETLUtil;
+
 public class WBSElementUserField1Generator {
 	static Logger logger = Logger.getLogger(WBSElementUserField1Generator.class);
 
-	public final static HashMap<WBSElementUserField1ColumnHeaders, String> destinationConstants = new HashMap<WBSElementUserField1ColumnHeaders, String>();
+	public final static HashMap<WBSElementUserField1ColumnHeaders, Object> destinationConstants = new HashMap<WBSElementUserField1ColumnHeaders, Object>();
 	//public final static HashMap<String, ReferenceTable> referenceTableMap = new HashMap<String, ReferenceTable>();
 	static {
 
@@ -72,14 +74,14 @@ public class WBSElementUserField1Generator {
 				if (WBSElementUserField1ColumnHeaders.PSPID == wbsElementUserField1ColumnHeader) {
 					Cell desCell = wBSElementUserField1TargetRow
 							.createCell(wbsElementUserField1ColumnHeader.getColumnIndex() - 1);
-					desCell.setCellValue(pspid);
+					ETLUtil.setCellValue(desCell, pspid, logger);
 					logger.debug("in generateWBSElementUserField1TargetFile adding PSPID column  " + pspid);
 				}
 
 				if (WBSElementUserField1ColumnHeaders.YYKEYCODE == wbsElementUserField1ColumnHeader) {
 					Cell desCell = wBSElementUserField1TargetRow
 							.createCell(wbsElementUserField1ColumnHeader.getColumnIndex() - 1);
-					desCell.setCellValue(keyCode);
+					ETLUtil.setCellValue(desCell, keyCode, logger);
 					logger.debug("in generateWBSElementUserField1TargetFile adding PSPID column  " + pspid);
 				}
 
@@ -96,21 +98,14 @@ public class WBSElementUserField1Generator {
 					} else if (projectType.equals("ED")) {
 						fundingDetail = "IRD";
 					}
-					desCell.setCellValue(fundingDetail);
+					ETLUtil.setCellValue(desCell, fundingDetail, logger);
 					logger.debug("in generateWBSElementUserField1TargetFile adding YYFUNDDTL column  " + fundingDetail);
-				}
-
-				if (WBSElementUserField1ColumnHeaders.PSPID == wbsElementUserField1ColumnHeader) {
-					Cell desCell = wBSElementUserField1TargetRow
-							.createCell(wbsElementUserField1ColumnHeader.getColumnIndex() - 1);
-					desCell.setCellValue(pspid);
-					logger.debug("in generateWBSElementUserField1TargetFile adding PSPID column  " + pspid);
 				}
 
 				if (destinationConstants.get(wbsElementUserField1ColumnHeader) != null) {
 					Cell desCell = wBSElementUserField1TargetRow
 							.createCell(wbsElementUserField1ColumnHeader.getColumnIndex() - 1);
-					desCell.setCellValue(destinationConstants.get(wbsElementUserField1ColumnHeader));
+					ETLUtil.setCellValue(desCell, destinationConstants.get(wbsElementUserField1ColumnHeader), logger);
 					logger.debug("in generateWBSElementUserField1TargetFile adding constant column  "
 							+ wbsElementUserField1ColumnHeader.getColumnHeader() + desCell.getStringCellValue());
 				}

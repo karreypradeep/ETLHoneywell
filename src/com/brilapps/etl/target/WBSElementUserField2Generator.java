@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import com.brilapps.etl.ETLUtil;
+
 public class WBSElementUserField2Generator {
 	static Logger logger = Logger.getLogger(WBSElementUserField2Generator.class);
 
@@ -34,19 +36,17 @@ public class WBSElementUserField2Generator {
 				if (WBSElementUserField2ColumnHeaders.YYCONTRTYPE == wbsElementUserField2ColumnHeader) {
 					Cell desCell = wBSElementUserField1TargetRow
 							.createCell(wbsElementUserField2ColumnHeader.getColumnIndex() - 1);
-					String fundingDetail = "";
+					String fundingDetail = "None";
 					if (projectType.equals("EC")) {
 						fundingDetail = "Commercial";
 					}
-					desCell.setCellValue(fundingDetail);
-					logger.debug("in generateWBSElementUserField2TargetFile adding YYFUNDDTL column  " + fundingDetail);
+					ETLUtil.setCellValue(desCell, fundingDetail, logger);
 				}
 
 				if (WBSElementUserField2ColumnHeaders.PROJ_EXT == wbsElementUserField2ColumnHeader) {
 					Cell desCell = wBSElementUserField1TargetRow
 							.createCell(wbsElementUserField2ColumnHeader.getColumnIndex() - 1);
-					desCell.setCellValue(pspid);
-					logger.debug("in generateWBSElementUserField2TargetFile adding PSPID column  " + pspid);
+					ETLUtil.setCellValue(desCell, pspid, logger);
 				}
 
 			}

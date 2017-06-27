@@ -3,7 +3,6 @@ package com.brilapps.etl.target;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,7 +15,6 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -140,29 +138,9 @@ public class NetworkHeaderGenerator {
 			//Iterator<Cell> cellIterator = currentRow.iterator();
 			for (int i = 0; i < currentRow.getLastCellNum(); i++) {
 				Cell currentCell = currentRow.getCell(i);
+				Object cellValue = ETLUtil.getCellValue(currentCell, logger);
 				Cell desCell = row.createCell(colNum);
-				if (currentCell != null) {
-					if (currentCell.getCellType() == Cell.CELL_TYPE_BLANK) {
-						desCell.setCellValue("");
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_STRING) {
-						desCell.setCellValue(currentCell.getStringCellValue());
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-						if (DateUtil.isCellDateFormatted(currentCell)) {
-							if (currentCell.getDateCellValue() != null) {
-								String dateValue = new SimpleDateFormat("MM/dd/yyyy")
-										.format(currentCell.getDateCellValue());
-								desCell.setCellValue(dateValue);
-							}
-						} else {
-							desCell.setCellValue(currentCell.getNumericCellValue());
-						}
-
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_BOOLEAN) {
-						desCell.setCellValue(currentCell.getBooleanCellValue());
-					} else {
-						desCell.setCellValue("");
-					}
-				}
+				ETLUtil.setCellValue(desCell, cellValue, logger);
 				colNum++;
 			}
 			rowCount++;
@@ -241,15 +219,15 @@ public class NetworkHeaderGenerator {
 						if (TargetNetworkHeaderColumnHeaders.SERIAL == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(START_SERIAL_NUMBER + targetRowCount);
+							ETLUtil.setCellValue(cell, START_SERIAL_NUMBER + targetRowCount, logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
 									+ " serial no generated is " + (START_SERIAL_NUMBER + targetRowCount));
 						}
 						if (TargetNetworkHeaderColumnHeaders.KTEXT == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderNonDuplicateCurrentRow.getCell(taskDescriptionColumnIndex)
-									.getStringCellValue());
+							ETLUtil.setCellValue(cell, networkHeaderNonDuplicateCurrentRow
+									.getCell(taskDescriptionColumnIndex).getStringCellValue(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
 									+ " KTEXT is " + networkHeaderNonDuplicateCurrentRow.getCell(taskDescriptionColumnIndex)
 									.getStringCellValue());
@@ -257,70 +235,72 @@ public class NetworkHeaderGenerator {
 						if (TargetNetworkHeaderColumnHeaders.PROFID == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getProfid());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getProfid(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
 									+ " PROFID is " + networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.PS_AUFART == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getPsAufart());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getPsAufart(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PS_AUFART is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.WERKS == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getWerks());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getWerks(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " WERKS is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.PRONR == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getIdent().substring(0, 9));
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getIdent().substring(0, 9),
+									logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PRONR is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.PROJN == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getIdent());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getIdent(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PROJN is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.SCOPE == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getScope());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getScope(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " SCOPE is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.KALSM == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getKalsm());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getKalsm(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " KALSM is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (TargetNetworkHeaderColumnHeaders.PRCTR == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getPrctr());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getPrctr(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PRCTR is "
 									+ networkHeaderWBSReferenceTable.getPrctr());
 						}
 						if (TargetNetworkHeaderColumnHeaders.ZSCHL == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							cell.setCellValue(networkHeaderWBSReferenceTable.getZschl());
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getZschl(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " ZSCHL is "
 									+ networkHeaderWBSReferenceTable.getProfid());
 						}
 						if (destinationConstants.get(targetNetworkHeaderColumnHeader) != null) {
 							Cell desCell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							desCell.setCellValue(destinationConstants.get(targetNetworkHeaderColumnHeader));
+							ETLUtil.setCellValue(desCell, destinationConstants.get(targetNetworkHeaderColumnHeader),
+									logger);
 							logger.debug("in generateWBStargetFile adding constant column  "
 									+ targetNetworkHeaderColumnHeader.getColumnHeader() + desCell.getStringCellValue());
 						}

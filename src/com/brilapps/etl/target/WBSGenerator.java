@@ -17,7 +17,6 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -31,7 +30,7 @@ public class WBSGenerator {
 	static Logger logger = Logger.getLogger(WBSGenerator.class);
 
 	public final static HashMap<TargetWBSColumnHeaders, TargetProjectDefinitionColumnHeaders> destinationSourceCloumnMaps = new HashMap<TargetWBSColumnHeaders, TargetProjectDefinitionColumnHeaders>();
-	public final static HashMap<TargetWBSColumnHeaders, String> destinationConstants = new HashMap<TargetWBSColumnHeaders, String>();
+	public final static HashMap<TargetWBSColumnHeaders, Object> destinationConstants = new HashMap<TargetWBSColumnHeaders, Object>();
 	//public final static HashMap<String, ReferenceTable> referenceTableMap = new HashMap<String, ReferenceTable>();
 
 	private static List<SourceWBSColumnHeaders> UNIQUE_KEYS = new ArrayList<SourceWBSColumnHeaders>();
@@ -62,7 +61,7 @@ public class WBSGenerator {
 		destinationConstants.put(TargetWBSColumnHeaders.PLAKZ, "X");
 		destinationConstants.put(TargetWBSColumnHeaders.BELKZ, "X");
 		//destinationConstants.put(TargetWBSColumnHeaders.FAKKZ, "X");
-		destinationConstants.put(TargetWBSColumnHeaders.VERNR, "999999");
+		destinationConstants.put(TargetWBSColumnHeaders.VERNR, 999999);
 		destinationConstants.put(TargetWBSColumnHeaders.FKOKR, "AERO");
 		destinationConstants.put(TargetWBSColumnHeaders.PSTRT, new SimpleDateFormat("MM/dd/yyyy").format(new Date()));
 		destinationConstants.put(TargetWBSColumnHeaders.PENDE, new SimpleDateFormat("MM/dd/yyyy").format(new Date()));
@@ -208,29 +207,9 @@ public class WBSGenerator {
 			//Iterator<Cell> cellIterator = currentRow.iterator();
 			for (int i = 0; i < currentRow.getLastCellNum(); i++) {
 				Cell currentCell = currentRow.getCell(i);
+				Object cellValue = ETLUtil.getCellValue(currentCell, logger);
 				Cell desCell = row.createCell(colNum);
-				if (currentCell != null) {
-					if (currentCell.getCellType() == Cell.CELL_TYPE_BLANK) {
-						desCell.setCellValue("");
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_STRING) {
-						desCell.setCellValue(currentCell.getStringCellValue());
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-						if (DateUtil.isCellDateFormatted(currentCell)) {
-							if (currentCell.getDateCellValue() != null) {
-								String dateValue = new SimpleDateFormat("MM/dd/yyyy")
-										.format(currentCell.getDateCellValue());
-								desCell.setCellValue(dateValue);
-							}
-						} else {
-							desCell.setCellValue(currentCell.getNumericCellValue());
-						}
-
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_BOOLEAN) {
-						desCell.setCellValue(currentCell.getBooleanCellValue());
-					} else {
-						desCell.setCellValue("");
-					}
-				}
+				ETLUtil.setCellValue(desCell, cellValue, logger);
 				colNum++;
 			}
 			rowCount++;
@@ -338,6 +317,14 @@ public class WBSGenerator {
 					networkHeaderWBSReferenceTable.setProjectNo(projectNo);
 					List<Row> targetWBSRows = new ArrayList<Row>();
 					targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
+					int pdTargetProjectTypeIndex = pdTargetHeaderColumnIndexMap
+							.get(TargetProjectDefinitionColumnHeaders.PROJECT_TYPE.getColumnHeader());
+					Cell projectTypeCell = correspondingProjectDefinitionRow.getCell(pdTargetProjectTypeIndex);
+					ProjectType projectType = null;
+					if (projectTypeCell != null && projectTypeCell.getStringCellValue() != null) {
+						projectType = ProjectType.getProjectTypeByProjectPrefix(projectTypeCell.getStringCellValue());
+					}
+
 					if (!convertedProjectNos.contains(projectNo)) {
 						logger.debug("in generateWBStargetFile adding project definition and stufe row ");
 						// create level 2 row
@@ -354,53 +341,53 @@ public class WBSGenerator {
 								.getColumnHeadersByIndex()) {
 							if (TargetWBSColumnHeaders.SERIAL == targetWBSColumnHeader) {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
-								double serialNo = correspondingProjectDefinitionRow.getCell(pdTargetHeaderColumnIndexMap
-										.get(TargetProjectDefinitionColumnHeaders.SERIAL.getColumnHeader()))
-										.getNumericCellValue();
-								desCell.setCellValue((int) serialNo);
-								networkHeaderWBSReferenceTable.setSerialNo((long) serialNo);
-								logger.debug("in generateWBStargetFile adding serial no " + serialNo);
+								try {
+									double serialNo = Double.parseDouble(ETLUtil.getCellValue(
+											correspondingProjectDefinitionRow.getCell(pdTargetHeaderColumnIndexMap.get(
+													TargetProjectDefinitionColumnHeaders.SERIAL.getColumnHeader())),
+											logger).toString());
+									ETLUtil.setCellValue(desCell, (int) serialNo, logger);
+									networkHeaderWBSReferenceTable.setSerialNo((long) serialNo);
+									logger.debug("in generateWBStargetFile adding serial no " + serialNo);
+								} catch (NumberFormatException nfe) {
+									logger.error("in generateWBStargetFile adding serial no ", nfe);
+								}
+
 							}
 							if (TargetWBSColumnHeaders.STUFE == targetWBSColumnHeader) {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
 								if (projectWiseRowCount < 3 && targetWBSRows.size() > 1) {
-									desCell.setCellValue(projectWiseRowCount);
-									logger.debug("in generateWBStargetFile adding stufe " + projectWiseRowCount);
+									ETLUtil.setCellValue(desCell, projectWiseRowCount, logger);
 								} else {
 									// Get LOWER_LEVEL cell and add 1
-									desCell.setCellValue(Integer.valueOf(wbsNonDuplicateCurrentRow
+									ETLUtil.setCellValue(desCell, Integer.valueOf(wbsNonDuplicateCurrentRow
 											.getCell(wbsSourceHeaderColumnIndexMap
 													.get(SourceWBSColumnHeaders.LOW_LEVEL.getColumnHeader()))
-											.getStringCellValue()) + 1);
-									logger.debug(
-											"in generateWBStargetFile adding stufe " + desCell.getNumericCellValue());
+											.getStringCellValue()) + 1, logger);
 								}
 							}
 							if (TargetWBSColumnHeaders.IDENT == targetWBSColumnHeader) {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
 								if (projectWiseRowCount == 1 && targetWBSRows.size() > 1) {
-									desCell.setCellValue(correspondingProjectDefinitionRow
+									ETLUtil.setCellValue(desCell, correspondingProjectDefinitionRow
 											.getCell(pdTargetHeaderColumnIndexMap
-													.get(TargetProjectDefinitionColumnHeaders.PSPID.getColumnHeader()))
-											.getStringCellValue());
-									logger.debug(
-											"in generateWBStargetFile adding IDENT " + desCell.getStringCellValue());
+													.get(TargetProjectDefinitionColumnHeaders.PSPID.getColumnHeader())),
+											logger);
 								} else if (projectWiseRowCount == 2 && targetWBSRows.size() > 1) {
-									desCell.setCellValue(correspondingProjectDefinitionRow
+									ETLUtil.setCellValue(desCell, correspondingProjectDefinitionRow
 											.getCell(pdTargetHeaderColumnIndexMap
 													.get(TargetProjectDefinitionColumnHeaders.PSPID.getColumnHeader()))
-											.getStringCellValue() + "-BILL1");
-									logger.debug(
-											"in generateWBStargetFile adding IDENT " + desCell.getStringCellValue());
+											.getStringCellValue() + "-BILL1", logger);
 								} else {
-									desCell.setCellValue(correspondingProjectDefinitionRow
+									ETLUtil.setCellValue(desCell, correspondingProjectDefinitionRow
 											.getCell(pdTargetHeaderColumnIndexMap
 													.get(TargetProjectDefinitionColumnHeaders.PSPID.getColumnHeader()))
 											.getStringCellValue() + "-"
 											+ wbsNonDuplicateCurrentRow.getCell(
 													wbsSourceHeaderColumnIndexMap
 													.get(SourceWBSColumnHeaders.TASKNO.getColumnHeader()))
-											.getStringCellValue());
+											.getStringCellValue(),
+											logger);
 									networkHeaderWBSReferenceTable
 									.setTaskNo(wbsNonDuplicateCurrentRow.getCell(wbsSourceHeaderColumnIndexMap
 											.get(SourceWBSColumnHeaders.TASKNO.getColumnHeader()))
@@ -416,53 +403,34 @@ public class WBSGenerator {
 								if (projectWiseRowCount == 1 && targetWBSRows.size() > 1) {
 									int pdTargetHeaderColumnIndex = pdTargetHeaderColumnIndexMap
 											.get(TargetProjectDefinitionColumnHeaders.POST1.getColumnHeader());
-									desCell.setCellValue(correspondingProjectDefinitionRow
-											.getCell(pdTargetHeaderColumnIndex).getStringCellValue());
-									logger.debug(
-											"in generateWBStargetFile adding POST1 " + desCell.getStringCellValue());
+									Object post1 = ETLUtil.getCellValue(
+											correspondingProjectDefinitionRow.getCell(pdTargetHeaderColumnIndex),
+											logger);
+									ETLUtil.setCellValue(desCell, post1, logger);
 								} else if (projectWiseRowCount == 2 && targetWBSRows.size() > 1) {
-									desCell.setCellValue("BILLING");
+									ETLUtil.setCellValue(desCell, "BILLING", logger);
 									logger.debug(
 											"in generateWBStargetFile adding POST1 " + desCell.getStringCellValue());
 								} else {
-									desCell.setCellValue(wbsNonDuplicateCurrentRow
-											.getCell(wbsSourceHeaderColumnIndexMap
-													.get(SourceWBSColumnHeaders.DESCRIPTION.getColumnHeader()))
-											.getStringCellValue());
-									logger.debug(
-											"in generateWBStargetFile adding POST1 " + desCell.getStringCellValue());
+									Object post1 = ETLUtil.getCellValue(
+											wbsNonDuplicateCurrentRow.getCell(wbsSourceHeaderColumnIndexMap
+													.get(SourceWBSColumnHeaders.DESCRIPTION.getColumnHeader())),
+											logger);
+									ETLUtil.setCellValue(desCell, post1, logger);
 								}
 							}
 
 							if (TargetWBSColumnHeaders.PRART == targetWBSColumnHeader) {
-								int pdTargetHeaderColumnIndex = pdTargetHeaderColumnIndexMap
-										.get(TargetProjectDefinitionColumnHeaders.PROJECT_TYPE.getColumnHeader());
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
-								Cell currentCell = correspondingProjectDefinitionRow.getCell(pdTargetHeaderColumnIndex);
-								if (currentCell != null && currentCell.getStringCellValue() != null) {
-									ProjectType projectType = ProjectType
-											.getProjectTypeByProjectPrefix(currentCell.getStringCellValue());
-									desCell.setCellValue(projectType.getProjectType());
-									networkHeaderWBSReferenceTable.setProjectType(projectType);
-									networkHeaderWBSReferenceTable.setProfid(projectType.getNetworkProfile());
-									networkHeaderWBSReferenceTable.setPsAufart(projectType.getNetworkType());
-									logger.debug(
-											"in generateWBStargetFile adding PRART " + desCell.getStringCellValue());
-								}
+								ETLUtil.setCellValue(desCell, projectType.getProjectType(), logger);
+								networkHeaderWBSReferenceTable.setProjectType(projectType);
+								networkHeaderWBSReferenceTable.setProfid(projectType.getNetworkProfile());
+								networkHeaderWBSReferenceTable.setPsAufart(projectType.getNetworkType());
 							}
 
 							if (TargetWBSColumnHeaders.USR03 == targetWBSColumnHeader) {
-								int pdTargetHeaderColumnIndex = pdTargetHeaderColumnIndexMap
-										.get(TargetProjectDefinitionColumnHeaders.PROJECT_TYPE.getColumnHeader());
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
-								Cell currentCell = correspondingProjectDefinitionRow.getCell(pdTargetHeaderColumnIndex);
-								if (currentCell != null && currentCell.getStringCellValue() != null) {
-									ProjectType projectType = ProjectType
-											.getProjectTypeByProjectPrefix(currentCell.getStringCellValue());
-									desCell.setCellValue(projectType.getTaxPurpose());
-									logger.debug("in generateWBStargetFile adding PROJECT_TYPE "
-											+ desCell.getStringCellValue());
-								}
+								ETLUtil.setCellValue(desCell, projectType.getTaxPurpose(), logger);
 							}
 
 							if (destinationSourceCloumnMaps.get(targetWBSColumnHeader) != null) {
@@ -474,50 +442,25 @@ public class WBSGenerator {
 								Cell currentCell = correspondingProjectDefinitionRow.getCell(pdTargetHeaderColumnIndex);
 								logger.debug("in generateWBStargetFile adding destination column  "
 										+ targetWBSColumnHeader.getColumnHeader());
-								if (currentCell != null) {
-									if (currentCell.getCellType() == Cell.CELL_TYPE_BLANK) {
-										desCell.setCellValue("");
-										logger.debug("in generateWBStargetFile adding destination column blank value ");
-									} else if (currentCell.getCellType() == Cell.CELL_TYPE_STRING) {
-										desCell.setCellValue(currentCell.getStringCellValue());
-										logger.debug("in generateWBStargetFile adding destination column string value "
-												+ currentCell.getStringCellValue());
-									} else if (currentCell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-										if (DateUtil.isCellDateFormatted(currentCell)) {
-											if (currentCell.getDateCellValue() != null) {
-												String dateValue = new SimpleDateFormat("MM/dd/yyyy")
-														.format(currentCell.getDateCellValue());
-												desCell.setCellValue(dateValue);
-												logger.debug(
-														"in generateWBStargetFile adding destination column date value "
-																+ dateValue);
-											}
-										} else {
-											desCell.setCellValue(currentCell.getNumericCellValue());
-											logger.debug(
-													"in generateWBStargetFile adding destination column date value "
-															+ currentCell.getNumericCellValue());
-										}
+								Object cellValue = "";
 
-									} else if (currentCell.getCellType() == Cell.CELL_TYPE_BOOLEAN) {
-										desCell.setCellValue(currentCell.getBooleanCellValue());
-									} else {
-										desCell.setCellValue("");
-									}
+								if (currentCell != null) {
+									cellValue = ETLUtil.getCellValue(currentCell, logger);
+									ETLUtil.setCellValue(desCell, cellValue, logger);
 								}
 
 								if (TargetWBSColumnHeaders.WERKS == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setWerks(desCell.getStringCellValue());
+									networkHeaderWBSReferenceTable.setWerks(cellValue.toString());
 								} else if (TargetWBSColumnHeaders.PRCTR == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setPrctr(desCell.getStringCellValue());
+									networkHeaderWBSReferenceTable.setPrctr(cellValue.toString());
 								} else if (TargetWBSColumnHeaders.SCOPE == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setScope(desCell.getStringCellValue());
+									networkHeaderWBSReferenceTable.setScope(cellValue.toString());
 								}
 							}
 							if (TargetWBSColumnHeaders.FAKKZ == targetWBSColumnHeader) {
 								if (projectWiseRowCount == 2) {
 									Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
-									desCell.setCellValue("X");
+									ETLUtil.setCellValue(desCell, "X", logger);
 									logger.debug(
 											"in generateWBStargetFile adding destination column FAKKZ with value "
 													+ "X");
@@ -525,9 +468,7 @@ public class WBSGenerator {
 							}
 							if (destinationConstants.get(targetWBSColumnHeader) != null) {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
-								desCell.setCellValue(destinationConstants.get(targetWBSColumnHeader));
-								logger.debug("in generateWBStargetFile adding constant column  "
-										+ targetWBSColumnHeader.getColumnHeader() + desCell.getStringCellValue());
+								ETLUtil.setCellValue(desCell, destinationConstants.get(targetWBSColumnHeader), logger);
 								if (TargetWBSColumnHeaders.KALSM == targetWBSColumnHeader) {
 									networkHeaderWBSReferenceTable.setKalsm(desCell.getStringCellValue());
 								} else if (TargetWBSColumnHeaders.ZSCHL == targetWBSColumnHeader) {

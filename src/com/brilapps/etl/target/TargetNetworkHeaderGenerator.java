@@ -18,6 +18,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.brilapps.etl.ETLUtil;
 import com.brilapps.etl.ProjectType;
 import com.brilapps.etl.source.ProjectDefinitionExtractor;
 import com.brilapps.etl.source.SourceProjectDefinitionColumnHeaders;
@@ -345,9 +346,7 @@ public class TargetNetworkHeaderGenerator {
 
 				if (projectType.getReferenceColumnValue(destinationHeader) != null) {
 					Cell desCell = row.createCell(colNum);
-					desCell.setCellValue(projectType.getReferenceColumnValue(destinationHeader));
-					logger.debug(" in generateProjectDefinitionRows()  reference column value "
-							+ projectType.getReferenceColumnValue(destinationHeader));
+					ETLUtil.setCellValue(desCell, projectType.getReferenceColumnValue(destinationHeader), logger);
 				}
 
 				if (TargetProjectDefinitionColumnHeaders.PROJECT_TYPE == destinationHeader) {

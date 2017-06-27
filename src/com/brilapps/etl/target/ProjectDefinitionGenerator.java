@@ -5,20 +5,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.brilapps.etl.ETLUtil;
+import com.brilapps.etl.ProjectDefinitionReferenceTable;
 import com.brilapps.etl.ProjectType;
 import com.brilapps.etl.source.ProjectDefinitionExtractor;
 import com.brilapps.etl.source.SourceProjectDefinitionColumnHeaders;
@@ -26,13 +25,11 @@ import com.brilapps.etl.source.SourceProjectDefinitionColumnHeaders;
 public class ProjectDefinitionGenerator {
 	static Logger logger = Logger.getLogger(ProjectDefinitionGenerator.class);
 
-	public final static String EC_PSPID_PREFIX = "EC-";
-	public final static long EC_START_SERIAL_NUMBER = 101;
 	private File sourceProjectDefinitionFile;
 	private File sourceWBSFile;
 
 	public final static HashMap<TargetProjectDefinitionColumnHeaders, SourceProjectDefinitionColumnHeaders> destinationSourceCloumnMaps = new HashMap<TargetProjectDefinitionColumnHeaders, SourceProjectDefinitionColumnHeaders>();
-	public final static HashMap<TargetProjectDefinitionColumnHeaders, String> destinationConstants = new HashMap<TargetProjectDefinitionColumnHeaders, String>();
+	public final static HashMap<TargetProjectDefinitionColumnHeaders, Object> destinationConstants = new HashMap<TargetProjectDefinitionColumnHeaders, Object>();
 	//public final static HashMap<String, ReferenceTable> referenceTableMap = new HashMap<String, ReferenceTable>();
 
 	static {
@@ -65,7 +62,7 @@ public class ProjectDefinitionGenerator {
 		// Constants Add all the constants columns here so that they will be
 		// directly added to target project definition file.
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.KIMSK, "          ++++++++++++++");
-		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VERNR, "999999");
+		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VERNR, 999999);
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.KALID, "YO");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.ZTEHT, "D");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VKOKR, "AERO");
@@ -276,6 +273,8 @@ public class ProjectDefinitionGenerator {
 		logger.debug(" in generateProjectDefinitionRows() after generating sourceColumnHeadersIndexMap");
 
 		int pspidStartIndex = 0;
+		ProjectDefinitionReferenceTable projectDefinitionReferenceTable = ETLUtil
+				.getProjectDefinitionReferenceTableByProjectPrefix().get(projectType.getProjectPrefix());
 		for (Row projectTypeRow : projectTypeRows) {
 			int colNum = 0;
 			long serialNo = 0;
@@ -288,18 +287,14 @@ public class ProjectDefinitionGenerator {
 				// Serial Column
 				if (colNum == 0) {
 					Cell cell = row.createCell(colNum);
-					serialNo = EC_START_SERIAL_NUMBER + count;
-					cell.setCellValue(serialNo);
-					logger.debug(" in generateProjectDefinitionRows() for row " + (count + 1)
-							+ " serial no generated is " + (EC_START_SERIAL_NUMBER + count));
+					serialNo = projectDefinitionReferenceTable.getSerialNoStartIndex() + count;
+					ETLUtil.setCellValue(cell, serialNo, logger);
 				}
 				// PSPID Column
 				if (colNum == 1) {
 					pspid = projectType.getPSPID_PREFIX() + (projectType.getPspidStartIndex() + pspidStartIndex);
 					Cell cell = row.createCell(colNum);
-					cell.setCellValue(pspid);
-					logger.debug(" in generateProjectDefinitionRows() for row " + (count + 1) + " PSPID generated is "
-							+ pspid);
+					ETLUtil.setCellValue(cell, pspid, logger);
 				}
 				// IF the cell has to be populated from source file then get
 				// the column header and get the value from the extractor
@@ -311,63 +306,33 @@ public class ProjectDefinitionGenerator {
 					Cell currentCell = projectTypeRow.getCell(
 							sourceColumnHeadersIndexMap.get(destinationSourceCloumnMaps.get(destinationHeader)));
 					Cell desCell = row.createCell(colNum);
-					if (currentCell.getCellType() == Cell.CELL_TYPE_BLANK) {
-						desCell.setCellValue("");
-						logger.debug(" in generateProjectDefinitionRows() blank cell");
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_STRING) {
-						desCell.setCellValue(currentCell.getStringCellValue());
-						logger.debug(" in generateProjectDefinitionRows()  string value "
-								+ currentCell.getStringCellValue());
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-						if (DateUtil.isCellDateFormatted(currentCell)) {
-							if (currentCell.getDateCellValue() != null) {
-								String dateValue = new SimpleDateFormat("MM/dd/yyyy")
-										.format(currentCell.getDateCellValue());
-								desCell.setCellValue(dateValue);
-								logger.debug(" in generateProjectDefinitionRows()  date value " + dateValue);
-							}
-						} else {
-							desCell.setCellValue(currentCell.getNumericCellValue());
-							logger.debug(" in generateProjectDefinitionRows()  number value "
-									+ currentCell.getNumericCellValue());
-						}
-
-					} else if (currentCell.getCellType() == Cell.CELL_TYPE_BOOLEAN) {
-						desCell.setCellValue(currentCell.getBooleanCellValue());
-						logger.debug(" in generateProjectDefinitionRows()  boolean value "
-								+ currentCell.getBooleanCellValue());
-					}
-
+					Object cellValue = "";
 					if (TargetProjectDefinitionColumnHeaders.POST1 == destinationHeader) {
 						Cell projectNoCell = projectTypeRow.getCell(
 								sourceColumnHeadersIndexMap.get(SourceProjectDefinitionColumnHeaders.PROJECTNO));
 						projectNo = projectNoCell.getStringCellValue();
-						desCell.setCellValue(
-								currentCell.getStringCellValue().trim() + " - " + projectNoCell.getStringCellValue());
-						logger.debug(" in generateProjectDefinitionRows()  string value for description field POST1 "
-								+ currentCell.getStringCellValue().trim() + " - " + projectNo);
+						cellValue = currentCell.getStringCellValue().trim() + " - "
+								+ projectNoCell.getStringCellValue();
+					} else {
+						cellValue = ETLUtil.getCellValue(currentCell, logger);
 					}
+					ETLUtil.setCellValue(desCell, cellValue, logger);
+
 				}
 
 				if (destinationConstants.get(destinationHeader) != null) {
 					Cell desCell = row.createCell(colNum);
-					desCell.setCellValue(destinationConstants.get(destinationHeader));
-					logger.debug(" in generateProjectDefinitionRows()  constant value "
-							+ destinationConstants.get(destinationHeader));
+					ETLUtil.setCellValue(desCell, destinationConstants.get(destinationHeader), logger);
 				}
 
 				if (projectType.getReferenceColumnValue(destinationHeader) != null) {
 					Cell desCell = row.createCell(colNum);
-					desCell.setCellValue(projectType.getReferenceColumnValue(destinationHeader));
-					logger.debug(" in generateProjectDefinitionRows()  reference column value "
-							+ projectType.getReferenceColumnValue(destinationHeader));
+					ETLUtil.setCellValue(desCell, projectType.getReferenceColumnValue(destinationHeader), logger);
 				}
 
 				if (TargetProjectDefinitionColumnHeaders.PROJECT_TYPE == destinationHeader) {
 					Cell desCell = row.createCell(colNum);
-					desCell.setCellValue(projectType.getProjectPrefix());
-					logger.debug(" in generateProjectDefinitionRows()  PROJECT_TYPE "
-							+ projectType.getProjectPrefix());
+					ETLUtil.setCellValue(desCell, projectType.getProjectPrefix(), logger);
 				}
 				/*if (referenceTableMap.get("EC") != null) {
 					ReferenceTable referenceTable = referenceTableMap.get(projectType);
