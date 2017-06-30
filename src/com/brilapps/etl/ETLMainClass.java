@@ -134,7 +134,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		add(jButton6);
 		jButton6.addActionListener(this);
 
-		/*projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
+		projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
 		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
 		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
 		destinationFolderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents");
@@ -144,7 +144,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
 		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");
 		projectDefinitionReferenceTableFile = new File(
-				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");*/
+				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
 
 
 	}
@@ -299,16 +299,28 @@ public class ETLMainClass extends JFrame implements ActionListener {
 
 	private void updateLog4jConfiguration() {
 		Properties props = new Properties();
-		props.setProperty("log4j.rootLogger", "DEBUG, Appender1,Appender2");
+		props.setProperty("log4j.rootLogger", "DEBUG, Appender1,Appender2,Appender3");
 		props.setProperty("log4j.appender.Appender1", "org.apache.log4j.ConsoleAppender");
 		props.setProperty("log4j.appender.Appender1.layout", "org.apache.log4j.PatternLayout");
 		props.setProperty("log4j.appender.Appender1.layout.ConversionPattern", "%-7p %d [%t] %c %x - %m%n");
+		props.setProperty("log4j.appender.Appender1.Threshold", "DEBUG");
 
 		props.setProperty("log4j.appender.Appender2", "org.apache.log4j.FileAppender");
 		props.setProperty("log4j.appender.Appender2.layout", "org.apache.log4j.PatternLayout");
 		props.setProperty("log4j.appender.Appender2.layout.ConversionPattern", "%-7p %d [%t] %c %x - %m%n");
 		props.setProperty("log4j.appender.Appender2.file",
 				destinationFolder.getAbsolutePath() + "/applogger.log");
+		props.setProperty("log4j.appender.Appender2.Threshold", "ERROR");
+		props.setProperty("log4j.appender.Appender2.Append", "false");
+
+		props.setProperty("log4j.appender.Appender3", "org.apache.log4j.FileAppender");
+		props.setProperty("log4j.appender.Appender3.layout", "org.apache.log4j.PatternLayout");
+		props.setProperty("log4j.appender.Appender3.layout.ConversionPattern", "%-7p %d [%t] %c %x - %m%n");
+		props.setProperty("log4j.appender.Appender3.file",
+				destinationFolder.getAbsolutePath() + "/applogger_debug.log");
+		props.setProperty("log4j.appender.Appender3.Threshold", "DEBUG");
+		props.setProperty("log4j.appender.Appender3.Append", "false");
+
 		LogManager.resetConfiguration();
 		PropertyConfigurator.configure(props);
 	}

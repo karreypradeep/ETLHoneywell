@@ -80,12 +80,16 @@ public final class ETLUtil {
 		switch (cell.getCellType()) {
 		case Cell.CELL_TYPE_STRING:
 			cellValue = cell.getStringCellValue();
-			logger.debug(" retrieving cell  String value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" retrieving cell  String value " + cellValue);
+			}
 			break;
 
 		case Cell.CELL_TYPE_FORMULA:
 			cellValue = cell.getCellFormula();
-			logger.debug(" retrieving cell  Formula value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" retrieving cell  Formula value " + cellValue);
+			}
 			break;
 
 		case Cell.CELL_TYPE_NUMERIC:
@@ -94,21 +98,29 @@ public final class ETLUtil {
 				if (cellValue.toString().contains("1900")) {
 					cellValue = new SimpleDateFormat("MM/dd/yyyy").format(new java.util.Date());
 				}
-				logger.debug(" retrieving cell  Date value " + cellValue);
+				if (logger.isDebugEnabled()) {
+					logger.debug(" retrieving cell  Date value " + cellValue);
+				}
 			} else {
 				cellValue = cell.getNumericCellValue();
-				logger.debug(" retrieving cell  Numeriv value " + cellValue);
+				if (logger.isDebugEnabled()) {
+					logger.debug(" retrieving cell  Numeriv value " + cellValue);
+				}
 			}
 			break;
 
 		case Cell.CELL_TYPE_BLANK:
 			cellValue = "";
-			logger.debug(" retrieving cell  Blank value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" retrieving cell  Blank value " + cellValue);
+			}
 			break;
 
 		case Cell.CELL_TYPE_BOOLEAN:
 			cellValue = Boolean.toString(cell.getBooleanCellValue());
-			logger.debug(" retrieving cell  Boolean value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" retrieving cell  Boolean value " + cellValue);
+			}
 			break;
 
 		}
@@ -122,25 +134,39 @@ public final class ETLUtil {
 		}
 		if (cellValue instanceof String) {
 			cell.setCellValue(cellValue.toString());
-			logger.debug(" setting cell  String value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  String value " + cellValue);
+			}
 		} else if (cellValue instanceof Integer) {
 			cell.setCellValue((int) cellValue);
-			logger.debug(" setting cell  Integer value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  Integer value " + cellValue);
+			}
 		} else if (cellValue instanceof Double) {
 			cell.setCellValue((Double) cellValue);
-			logger.debug(" setting cell  Double value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  Double value " + cellValue);
+			}
 		} else if (cellValue instanceof Long) {
 			cell.setCellValue((Long)cellValue);
-			logger.debug(" setting cell  Long value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  Long value " + cellValue);
+			}
 		} else if (cellValue instanceof Date || cellValue instanceof java.util.Date) {
 			cell.setCellValue(new SimpleDateFormat("MM/dd/yyyy").format(cellValue));
-			logger.debug(" setting cell  Date value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  Date value " + cellValue);
+			}
 		} else if (isNumeric(cellValue.toString())) {
 			cell.setCellValue((int) cellValue);
-			logger.debug(" setting cell  Object.toString value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  Object.toString value " + cellValue);
+			}
 		} else {
 			cell.setCellValue(cellValue.toString());
-			logger.debug(" setting cell  Object.toString value " + cellValue);
+			if (logger.isDebugEnabled()) {
+				logger.debug(" setting cell  Object.toString value " + cellValue);
+			}
 		}
 	}
 

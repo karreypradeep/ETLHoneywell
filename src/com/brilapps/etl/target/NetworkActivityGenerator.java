@@ -21,11 +21,13 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.brilapps.etl.ETLUtil;
+import com.brilapps.etl.ProjectConstants;
 import com.brilapps.etl.source.SourceNetworkActivityColumnHeaders;
 import com.brilapps.etl.source.SourceNetworkHeaderColumnHeaders;
 
 public class NetworkActivityGenerator {
 	static Logger logger = Logger.getLogger(NetworkActivityGenerator.class);
+
 
 	public final static HashMap<TargetNetworkActivityColumnHeaders, String> destinationConstants = new HashMap<TargetNetworkActivityColumnHeaders, String>();
 	private static List<SourceNetworkHeaderColumnHeaders> UNIQUE_KEYS_NETWORK_ACTIVITY = new ArrayList<SourceNetworkHeaderColumnHeaders>();
@@ -104,7 +106,9 @@ public class NetworkActivityGenerator {
 	}
 
 	public ArrayList<String> getColumnHeaders(final Sheet sheet) {
-		logger.debug(" entering getColumnHeaders() ");
+		if (logger.isDebugEnabled()) {
+			logger.debug(" entering getColumnHeaders() ");
+		}
 		ArrayList<String> headers = new ArrayList<String>();
 		Iterator<Row> iterator = sheet.iterator();
 		while (iterator.hasNext()) {
@@ -178,7 +182,8 @@ public class NetworkActivityGenerator {
 			if (costType != null) {
 				costTypeReference = ETLUtil.getCostTypeReferenceTableByCostType().get(costType.toString());
 				if (costTypeReference == null
-						|| costTypeReference.getCostTypeActualDescription().toUpperCase().equals("N/A")) {
+						|| costTypeReference.getCostTypeActualDescription().toUpperCase()
+						.equals(ProjectConstants.COST_TYPE_NA.toUpperCase())) {
 					continue;
 				}
 			}
@@ -230,22 +235,22 @@ public class NetworkActivityGenerator {
 			NetworkActivityCostTypeReferenceTable[] sortedNetworkHeaderActivityReferenceArray = new NetworkActivityCostTypeReferenceTable[6];
 			for (NetworkActivityCostTypeReferenceTable networkHeaderActivityReferenceTable : networkHeaderActivityReferences) {
 				if (networkHeaderActivityReferenceTable.getCostTypeActualDescription().toUpperCase()
-						.equals("MATERIAL")) {
+						.equals(ProjectConstants.COST_TYPE_MATERIAL.toUpperCase())) {
 					sortedNetworkHeaderActivityReferenceArray[0] = networkHeaderActivityReferenceTable;
 				} else if (networkHeaderActivityReferenceTable.getCostTypeActualDescription().toUpperCase()
-						.equals("LABOUR-ENG")) {
+						.equals(ProjectConstants.COST_TYPE_LABOUR_ENG.toUpperCase())) {
 					sortedNetworkHeaderActivityReferenceArray[1] = networkHeaderActivityReferenceTable;
 				} else if (networkHeaderActivityReferenceTable.getCostTypeActualDescription().toUpperCase()
-						.equals("LABOUR-MFG")) {
+						.equals(ProjectConstants.COST_TYPE_LABOUR_MFG.toUpperCase())) {
 					sortedNetworkHeaderActivityReferenceArray[2] = networkHeaderActivityReferenceTable;
 				} else if (networkHeaderActivityReferenceTable.getCostTypeActualDescription().toUpperCase()
-						.equals("ODC")) {
+						.equals(ProjectConstants.COST_TYPE_ODC.toUpperCase())) {
 					sortedNetworkHeaderActivityReferenceArray[3] = networkHeaderActivityReferenceTable;
 				} else if (networkHeaderActivityReferenceTable.getCostTypeActualDescription().toUpperCase()
-						.equals("TRAVEL")) {
+						.equals(ProjectConstants.COST_TYPE_TRAVEL.toUpperCase())) {
 					sortedNetworkHeaderActivityReferenceArray[4] = networkHeaderActivityReferenceTable;
 				} else if (networkHeaderActivityReferenceTable.getCostTypeActualDescription().toUpperCase()
-						.equals("MGMT-RES")) {
+						.equals(ProjectConstants.COST_TYPE_MGMT_RES.toUpperCase())) {
 					sortedNetworkHeaderActivityReferenceArray[5] = networkHeaderActivityReferenceTable;
 				}
 			}
@@ -260,12 +265,12 @@ public class NetworkActivityGenerator {
 		}
 
 		int rowCount = 1;
-		long vornr = 0;
+
 		for (String projectTaskNo : projectTaskNos) {
 
 			List<NetworkActivityCostTypeReferenceTable> networkHeaderCostTypeReferences = ETLUtil
 					.getNetworkActivityCostTypeTableListByProjectTaskNo().get(projectTaskNo);
-
+			long vornr = 0;
 			for (NetworkActivityCostTypeReferenceTable networkHeaderCostTypeReferenceTable : networkHeaderCostTypeReferences) {
 				NetworkHeaderActivityReferenceTable networkHeaderActivityReferenceTable = ETLUtil
 						.getNetworkHeaderActivityReferenceTableByProjectTaskNo()
@@ -389,8 +394,8 @@ public class NetworkActivityGenerator {
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
 						ETLUtil.setCellValue(cell, networkTargetNonDuplicateCurrentRow
 								.getCell(networkActivityNoDuplicateHeaderColumnIndexMap
-										.get(SourceNetworkActivityColumnHeaders.TASKNO.toString()))
-								.getStringCellValue(), logger);
+										.get(SourceNetworkActivityColumnHeaders.SERIAL_NO.toString()))
+								.getNumericCellValue(), logger);
 					} else if (TargetNetworkActivityColumnHeaders.VORNR == targetNetworkActivityColumnHeader) {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
@@ -413,8 +418,9 @@ public class NetworkActivityGenerator {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
 						String actType = "C";
-						if (actualCostType.toUpperCase().equals("Labour-Eng".toUpperCase())
-								|| actualCostType.toUpperCase().equals("Labour-Mfg".toUpperCase())) {
+						if (actualCostType.toUpperCase().equals(ProjectConstants.COST_TYPE_LABOUR_ENG.toUpperCase())
+								|| actualCostType.toUpperCase()
+								.equals(ProjectConstants.COST_TYPE_LABOUR_MFG.toUpperCase())) {
 							actType = "I";
 						}
 						ETLUtil.setCellValue(cell, actType, logger);
@@ -422,8 +428,9 @@ public class NetworkActivityGenerator {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
 						String steus = "PS03";
-						if (actualCostType.toUpperCase().equals("Labour-Eng".toUpperCase())
-								|| actualCostType.toUpperCase().equals("Labour-Mfg".toUpperCase())) {
+						if (actualCostType.toUpperCase().equals(ProjectConstants.COST_TYPE_LABOUR_ENG.toUpperCase())
+								|| actualCostType
+								.toUpperCase().equals(ProjectConstants.COST_TYPE_LABOUR_MFG.toUpperCase())) {
 							steus = "PS01";
 						}
 						ETLUtil.setCellValue(cell, steus, logger);
@@ -431,9 +438,10 @@ public class NetworkActivityGenerator {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
 						String arbpl = "";
-						if (actualCostType.toUpperCase().equals("Labour-Eng".toUpperCase())) {
+						if (actualCostType.toUpperCase().equals(ProjectConstants.COST_TYPE_LABOUR_ENG.toUpperCase())) {
 							arbpl = "TIMECHRG";
-						} else if (actualCostType.toUpperCase().equals("Labour-Mfg".toUpperCase())) {
+						} else if (actualCostType.toUpperCase()
+								.equals(ProjectConstants.COST_TYPE_LABOUR_MFG.toUpperCase())) {
 							arbpl = "ETPRZZXX";
 						}
 						ETLUtil.setCellValue(cell, arbpl, logger);
@@ -469,13 +477,15 @@ public class NetworkActivityGenerator {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
 						String sakto = "";
-						if (actualCostType.toUpperCase().equals("Material".toUpperCase())) {
+						if (actualCostType.toUpperCase().equals(ProjectConstants.COST_TYPE_MATERIAL.toUpperCase())) {
 							sakto = "9000000000";
-						} else if (actualCostType.toUpperCase().equals("ODC".toUpperCase())) {
+						} else if (actualCostType.toUpperCase().equals(ProjectConstants.COST_TYPE_ODC.toUpperCase())) {
 							sakto = "7780250000";
-						} else if (actualCostType.toUpperCase().equals("Travel".toUpperCase())) {
+						} else if (actualCostType.toUpperCase()
+								.equals(ProjectConstants.COST_TYPE_TRAVEL.toUpperCase())) {
 							sakto = "7350000001";
-						} else if (actualCostType.toUpperCase().equals("Mgmt-Res".toUpperCase())) {
+						} else if (actualCostType.toUpperCase()
+								.equals(ProjectConstants.COST_TYPE_MGMT_RES.toUpperCase())) {
 							sakto = "9000000001";
 						}
 						ETLUtil.setCellValue(cell, sakto, logger);
