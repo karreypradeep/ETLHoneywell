@@ -36,8 +36,6 @@ public class ProjectDefinitionGenerator {
 		// Map Destination Project Definition file columns headers with Target
 		// Project Definition file. This will be used later to get the values
 		// from source file and insert into destination file.
-		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.PROFL,
-				SourceProjectDefinitionColumnHeaders.PROJECT_PROFILE);
 		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.POST1,
 				SourceProjectDefinitionColumnHeaders.DESCRIPTION);
 		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.PLFAZ,
@@ -58,16 +56,21 @@ public class ProjectDefinitionGenerator {
 				SourceProjectDefinitionColumnHeaders.PROFIT_CENTER);
 		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.PROJECTNO,
 				SourceProjectDefinitionColumnHeaders.PROJECTNO);
+		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.VERNR,
+				SourceProjectDefinitionColumnHeaders.SAP_EMPLOYEE_NUMBER);
+		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.PD_REVENUE,
+				SourceProjectDefinitionColumnHeaders.REVENUE);
 
 		// Constants Add all the constants columns here so that they will be
 		// directly added to target project definition file.
-		destinationConstants.put(TargetProjectDefinitionColumnHeaders.KIMSK, "          ++++++++++++++");
-		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VERNR, 999999);
-		destinationConstants.put(TargetProjectDefinitionColumnHeaders.KALID, "YO");
+		destinationConstants.put(TargetProjectDefinitionColumnHeaders.KIMSK, "");
+		// destinationConstants.put(TargetProjectDefinitionColumnHeaders.VERNR,
+		// 999999);
+		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VTWEG, "01");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.ZTEHT, "D");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VKOKR, "AERO");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.PPROF, "Z00001");
-		destinationConstants.put(TargetProjectDefinitionColumnHeaders.BPROF, "Z00001");
+		destinationConstants.put(TargetProjectDefinitionColumnHeaders.BPROF, "");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.SMPRF, "0000001");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.STSPR, "ZPS00001");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.BESTA, "X");
@@ -292,9 +295,29 @@ public class ProjectDefinitionGenerator {
 				}
 				// PSPID Column
 				if (colNum == 1) {
-					pspid = projectType.getPSPID_PREFIX() + (projectType.getPspidStartIndex() + pspidStartIndex);
+					pspid = projectDefinitionReferenceTable.getPspidPrefix()
+							+ (projectDefinitionReferenceTable.getPspidStartIndex() + pspidStartIndex);
 					Cell cell = row.createCell(colNum);
 					ETLUtil.setCellValue(cell, pspid, logger);
+				}
+
+				if (TargetProjectDefinitionColumnHeaders.PROFL == destinationHeader) {
+					Cell cell = row.createCell(colNum);
+					ETLUtil.setCellValue(cell, projectDefinitionReferenceTable.getProjectProfile(), logger);
+				}
+
+				if (TargetProjectDefinitionColumnHeaders.KALID == destinationHeader) {
+					Cell companyCodeNoCell = projectTypeRow.getCell(
+							sourceColumnHeadersIndexMap.get(SourceProjectDefinitionColumnHeaders.COMPANY_CODE));
+					Object cellValue = ETLUtil.getCellValue(companyCodeNoCell, logger);
+					Cell desCell = row.createCell(colNum);
+					if (cellValue != null && (double) cellValue == 2040) {
+						ETLUtil.setCellValue(desCell, "X8", logger);
+					} else if (cellValue != null && (double) cellValue == 3040) {
+						ETLUtil.setCellValue(desCell, "XB", logger);
+					} else {
+						ETLUtil.setCellValue(desCell, "", logger);
+					}
 				}
 				// IF the cell has to be populated from source file then get
 				// the column header and get the value from the extractor
@@ -302,7 +325,6 @@ public class ProjectDefinitionGenerator {
 				if (destinationSourceCloumnMaps.get(destinationHeader) != null) {
 					logger.debug(" in generateProjectDefinitionRows() for row " + (count + 1)
 							+ " processing for column " + destinationHeader.getColumnHeader());
-
 					Cell currentCell = projectTypeRow.getCell(
 							sourceColumnHeadersIndexMap.get(destinationSourceCloumnMaps.get(destinationHeader)));
 					Cell desCell = row.createCell(colNum);
@@ -311,13 +333,12 @@ public class ProjectDefinitionGenerator {
 						Cell projectNoCell = projectTypeRow.getCell(
 								sourceColumnHeadersIndexMap.get(SourceProjectDefinitionColumnHeaders.PROJECTNO));
 						projectNo = projectNoCell.getStringCellValue();
-						cellValue = currentCell.getStringCellValue().trim() + " - "
-								+ projectNoCell.getStringCellValue();
+						cellValue = projectNoCell.getStringCellValue().trim() + " - "
+								+ currentCell.getStringCellValue().trim();
 					} else {
 						cellValue = ETLUtil.getCellValue(currentCell, logger);
 					}
 					ETLUtil.setCellValue(desCell, cellValue, logger);
-
 				}
 
 				if (destinationConstants.get(destinationHeader) != null) {
@@ -325,15 +346,19 @@ public class ProjectDefinitionGenerator {
 					ETLUtil.setCellValue(desCell, destinationConstants.get(destinationHeader), logger);
 				}
 
-				if (projectType.getReferenceColumnValue(destinationHeader) != null) {
-					Cell desCell = row.createCell(colNum);
-					ETLUtil.setCellValue(desCell, projectType.getReferenceColumnValue(destinationHeader), logger);
-				}
-
 				if (TargetProjectDefinitionColumnHeaders.PROJECT_TYPE == destinationHeader) {
 					Cell desCell = row.createCell(colNum);
-					ETLUtil.setCellValue(desCell, projectType.getProjectPrefix(), logger);
+					ETLUtil.setCellValue(desCell, projectDefinitionReferenceTable.getProjectPrefix(), logger);
 				}
+				if (TargetProjectDefinitionColumnHeaders.SCOPE == destinationHeader) {
+					Cell desCell = row.createCell(colNum);
+					ETLUtil.setCellValue(desCell, projectDefinitionReferenceTable.getScope(), logger);
+				}
+				if (TargetProjectDefinitionColumnHeaders.VPROF == destinationHeader) {
+					Cell desCell = row.createCell(colNum);
+					ETLUtil.setCellValue(desCell, projectDefinitionReferenceTable.getNetworkProfile(), logger);
+				}
+
 				/*if (referenceTableMap.get("EC") != null) {
 					ReferenceTable referenceTable = referenceTableMap.get(projectType);
 					for (Map.Entry<GeneratorProjectDefinitionColumnHeaders, String> entry : referenceTable

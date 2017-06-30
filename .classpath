@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="D:/BavaProject/ETLGitHub/ETLHoneywell/lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="D:/BavaProject/ETLGitHub/ETLHoneywell/lib/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="D:/BavaProject/ETLGitHub/ETLHoneywell/lib/ooxml-schemas-1.0.jar"/>
+	<classpathentry kind="lib" path="D:/BavaProject/ETLGitHub/ETLHoneywell/lib/poi-3.9.jar"/>
+	<classpathentry kind="lib" path="D:/BavaProject/ETLGitHub/ETLHoneywell/lib/poi-ooxml-3.9.jar"/>
+	<classpathentry kind="lib" path="D:/BavaProject/ETLGitHub/ETLHoneywell/lib/xmlbeans-2.6.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -8,14 +8,18 @@ public class NetworkHeaderWBSReferenceTable {
 	String taskNo;
 	String ident;
 	String psAufart;
-	String werks;
-	String prctr;
+	int werks;
+	int prctr;
 	String profid;
 	String scope;
 	String kalsm;
 	String zschl;
 	long serialNo;
 	ProjectType projectType;
+	String gstrp;
+	String gltrp;
+	String fabkl;
+	String usr03;
 
 	/**
 	 * @return the projectType
@@ -110,7 +114,7 @@ public class NetworkHeaderWBSReferenceTable {
 	/**
 	 * @return the werks
 	 */
-	public String getWerks() {
+	public int getWerks() {
 		return werks;
 	}
 
@@ -118,14 +122,14 @@ public class NetworkHeaderWBSReferenceTable {
 	 * @param werks
 	 *            the werks to set
 	 */
-	public void setWerks(final String werks) {
+	public void setWerks(final int werks) {
 		this.werks = werks;
 	}
 
 	/**
 	 * @return the prctr
 	 */
-	public String getPrctr() {
+	public int getPrctr() {
 		return prctr;
 	}
 
@@ -133,7 +137,7 @@ public class NetworkHeaderWBSReferenceTable {
 	 * @param prctr
 	 *            the prctr to set
 	 */
-	public void setPrctr(final String prctr) {
+	public void setPrctr(final int prctr) {
 		this.prctr = prctr;
 	}
 
@@ -195,6 +199,66 @@ public class NetworkHeaderWBSReferenceTable {
 	 */
 	public void setZschl(final String zschl) {
 		this.zschl = zschl;
+	}
+
+	/**
+	 * @return the gstrp
+	 */
+	public String getGstrp() {
+		return gstrp;
+	}
+
+	/**
+	 * @param gstrp
+	 *            the gstrp to set
+	 */
+	public void setGstrp(final String gstrp) {
+		this.gstrp = gstrp;
+	}
+
+	/**
+	 * @return the gltrp
+	 */
+	public String getGltrp() {
+		return gltrp;
+	}
+
+	/**
+	 * @param gltrp
+	 *            the gltrp to set
+	 */
+	public void setGltrp(final String gltrp) {
+		this.gltrp = gltrp;
+	}
+
+	/**
+	 * @return the fabkl
+	 */
+	public String getFabkl() {
+		return fabkl;
+	}
+
+	/**
+	 * @param fabkl
+	 *            the fabkl to set
+	 */
+	public void setFabkl(final String fabkl) {
+		this.fabkl = fabkl;
+	}
+
+	/**
+	 * @return the usr03
+	 */
+	public String getUsr03() {
+		return usr03;
+	}
+
+	/**
+	 * @param usr03
+	 *            the usr03 to set
+	 */
+	public void setUsr03(final String usr03) {
+		this.usr03 = usr03;
 	}
 
 	@Override

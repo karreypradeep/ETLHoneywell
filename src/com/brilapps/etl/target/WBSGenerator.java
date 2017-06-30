@@ -3,9 +3,7 @@ package com.brilapps.etl.target;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,18 +51,19 @@ public class WBSGenerator {
 		destinationSourceCloumnMaps.put(TargetWBSColumnHeaders.FABKL_ASSIGNMENT,
 				TargetProjectDefinitionColumnHeaders.KALID);
 		destinationSourceCloumnMaps.put(TargetWBSColumnHeaders.FABKL, TargetProjectDefinitionColumnHeaders.KALID);
+		destinationSourceCloumnMaps.put(TargetWBSColumnHeaders.VERNR, TargetProjectDefinitionColumnHeaders.VERNR);
+		destinationSourceCloumnMaps.put(TargetWBSColumnHeaders.PSTRT, TargetProjectDefinitionColumnHeaders.PLFAZ);
+		destinationSourceCloumnMaps.put(TargetWBSColumnHeaders.PENDE, TargetProjectDefinitionColumnHeaders.PLSEZ);
 
 
 		// Constants Add all the constants columns here so that they will be
 		// directly added to target WBS file.
 		destinationConstants.put(TargetWBSColumnHeaders.CLASF, "X");
 		destinationConstants.put(TargetWBSColumnHeaders.PLAKZ, "X");
-		destinationConstants.put(TargetWBSColumnHeaders.BELKZ, "X");
+		// destinationConstants.put(TargetWBSColumnHeaders.BELKZ, "X");
 		//destinationConstants.put(TargetWBSColumnHeaders.FAKKZ, "X");
-		destinationConstants.put(TargetWBSColumnHeaders.VERNR, 999999);
+		// destinationConstants.put(TargetWBSColumnHeaders.VERNR, 999999);
 		destinationConstants.put(TargetWBSColumnHeaders.FKOKR, "AERO");
-		destinationConstants.put(TargetWBSColumnHeaders.PSTRT, new SimpleDateFormat("MM/dd/yyyy").format(new Date()));
-		destinationConstants.put(TargetWBSColumnHeaders.PENDE, new SimpleDateFormat("MM/dd/yyyy").format(new Date()));
 		destinationConstants.put(TargetWBSColumnHeaders.FKOKR, "AERO");
 		destinationConstants.put(TargetWBSColumnHeaders.PEINH, "D");
 		// destinationConstants.put(TargetWBSColumnHeaders.FABKL, "YO");
@@ -316,7 +315,6 @@ public class WBSGenerator {
 					NetworkHeaderWBSReferenceTable networkHeaderWBSReferenceTable = new NetworkHeaderWBSReferenceTable();
 					networkHeaderWBSReferenceTable.setProjectNo(projectNo);
 					List<Row> targetWBSRows = new ArrayList<Row>();
-					targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
 					int pdTargetProjectTypeIndex = pdTargetHeaderColumnIndexMap
 							.get(TargetProjectDefinitionColumnHeaders.PROJECT_TYPE.getColumnHeader());
 					Cell projectTypeCell = correspondingProjectDefinitionRow.getCell(pdTargetProjectTypeIndex);
@@ -325,15 +323,45 @@ public class WBSGenerator {
 						projectType = ProjectType.getProjectTypeByProjectPrefix(projectTypeCell.getStringCellValue());
 					}
 
+					int revenueColumnIndex = pdTargetHeaderColumnIndexMap
+							.get(TargetProjectDefinitionColumnHeaders.PD_REVENUE.getColumnHeader());
+					Cell revenueCell = correspondingProjectDefinitionRow.getCell(revenueColumnIndex);
+					String pdRevenue = null;
+					if (revenueCell != null && revenueCell.getStringCellValue() != null) {
+						pdRevenue = revenueCell.getStringCellValue();
+					}
+					boolean addNetworkHeaderRows = true;
+					// if record is not already added then create 2 or three
+					// records one each for stuff 1 and 2
+					// for stuff 3 create a row only if revenue is Y in
+					// project definition file.
 					if (!convertedProjectNos.contains(projectNo)) {
 						logger.debug("in generateWBStargetFile adding project definition and stufe row ");
+						targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
 						// create level 2 row
 						targetRowCount++;
 						targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
-						// create level 3 row
 						targetRowCount++;
-						targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
+						// add WBS records only if revenue is "Y" in project
+						// definition file
+						if (pdRevenue != null && pdRevenue.equals("Y")) {
+							// create level 3 row
+							targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
+							targetRowCount++;
+						} else {
+							addNetworkHeaderRows = false;
+						}
 						convertedProjectNos.add(projectNo);
+					} else {
+						// create a row in WBS file only if revenue is Y in
+						// project definition file.
+						if (pdRevenue != null && pdRevenue.equals("Y")) {
+							targetWBSRows.add(targetWBSSheet.createRow(targetRowCount));
+							targetRowCount++;
+							addNetworkHeaderRows = true;
+						} else {
+							addNetworkHeaderRows = false;
+						}
 					}
 					int projectWiseRowCount = 1;
 					for (Row targetWBSRow : targetWBSRows) {
@@ -356,7 +384,8 @@ public class WBSGenerator {
 							}
 							if (TargetWBSColumnHeaders.STUFE == targetWBSColumnHeader) {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
-								if (projectWiseRowCount < 3 && targetWBSRows.size() > 1) {
+								if ((projectWiseRowCount == 1 || projectWiseRowCount == 2)
+										&& targetWBSRows.size() > 1) {
 									ETLUtil.setCellValue(desCell, projectWiseRowCount, logger);
 								} else {
 									// Get LOWER_LEVEL cell and add 1
@@ -364,6 +393,15 @@ public class WBSGenerator {
 											.getCell(wbsSourceHeaderColumnIndexMap
 													.get(SourceWBSColumnHeaders.LOW_LEVEL.getColumnHeader()))
 											.getStringCellValue()) + 1, logger);
+								}
+							}
+							if (TargetWBSColumnHeaders.BELKZ == targetWBSColumnHeader) {
+								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
+								if (projectWiseRowCount == 1 && targetWBSRows.size() > 1) {
+									ETLUtil.setCellValue(desCell, "", logger);
+								} else {
+									// Get LOWER_LEVEL cell and add 1
+									ETLUtil.setCellValue(desCell, "X", logger);
 								}
 							}
 							if (TargetWBSColumnHeaders.IDENT == targetWBSColumnHeader) {
@@ -430,6 +468,7 @@ public class WBSGenerator {
 
 							if (TargetWBSColumnHeaders.USR03 == targetWBSColumnHeader) {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
+								networkHeaderWBSReferenceTable.setUsr03(projectType.getTaxPurpose());
 								ETLUtil.setCellValue(desCell, projectType.getTaxPurpose(), logger);
 							}
 
@@ -450,11 +489,17 @@ public class WBSGenerator {
 								}
 
 								if (TargetWBSColumnHeaders.WERKS == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setWerks(cellValue.toString());
+									networkHeaderWBSReferenceTable.setWerks(((Double) cellValue).intValue());
 								} else if (TargetWBSColumnHeaders.PRCTR == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setPrctr(cellValue.toString());
+									networkHeaderWBSReferenceTable.setPrctr(((Double) cellValue).intValue());
 								} else if (TargetWBSColumnHeaders.SCOPE == targetWBSColumnHeader) {
 									networkHeaderWBSReferenceTable.setScope(cellValue.toString());
+								} else if (TargetWBSColumnHeaders.PSTRT == targetWBSColumnHeader) {
+									networkHeaderWBSReferenceTable.setGstrp(cellValue.toString());
+								} else if (TargetWBSColumnHeaders.PENDE == targetWBSColumnHeader) {
+									networkHeaderWBSReferenceTable.setGltrp(cellValue.toString());
+								} else if (TargetWBSColumnHeaders.FABKL == targetWBSColumnHeader) {
+									networkHeaderWBSReferenceTable.setFabkl(cellValue.toString());
 								}
 							}
 							if (TargetWBSColumnHeaders.FAKKZ == targetWBSColumnHeader) {
@@ -478,10 +523,12 @@ public class WBSGenerator {
 						}
 						projectWiseRowCount++;
 					}
-					targetRowCount++;
-					ETLUtil.getNetworkHeaderWBSReferenceTable().put(
-							networkHeaderWBSReferenceTable.getProjectNo() + networkHeaderWBSReferenceTable.getTaskNo(),
-							networkHeaderWBSReferenceTable);
+					// targetRowCount++;
+					if (addNetworkHeaderRows) {
+						ETLUtil.getNetworkHeaderWBSReferenceTable().put(
+								networkHeaderWBSReferenceTable.getProjectNo() + networkHeaderWBSReferenceTable.getTaskNo(),
+								networkHeaderWBSReferenceTable);
+					}
 				}
 			}
 			FileOutputStream targetOutputStream = new FileOutputStream(destinationWBSFile);

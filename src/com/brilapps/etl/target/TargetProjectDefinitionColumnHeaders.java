@@ -14,7 +14,7 @@ public enum TargetProjectDefinitionColumnHeaders {
 	XSTAT(29,"XSTAT"), PLINT(30,"PLINT"), TXJCD(31,"TXJCD"),
 	STSPR(32,"STSPR"), BESTA(33,"BESTA"), VKORG(34,"VKORG"),
 	VTWEG(35,"VTWEG"), SPART(36,"SPART"), DPPPROF(37,"DPPPROF")
-	, PROJECTNO(38,"PROJECTNO"), PROJECT_TYPE(39,"PROJECT_TYPE");
+	, PROJECTNO(38, "PROJECTNO"), PROJECT_TYPE(39, "PROJECT_TYPE"), PD_REVENUE(40, "PD_REVENUE");
 
 	private String columnHeader;
 	private int columnIndex;

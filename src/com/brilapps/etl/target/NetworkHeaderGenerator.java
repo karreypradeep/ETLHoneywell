@@ -29,11 +29,17 @@ public class NetworkHeaderGenerator {
 
 	public final static HashMap<TargetNetworkHeaderColumnHeaders, String> destinationConstants = new HashMap<TargetNetworkHeaderColumnHeaders, String>();
 
-	private static List<SourceNetworkHeaderColumnHeaders> UNIQUE_KEYS = new ArrayList<SourceNetworkHeaderColumnHeaders>();
+	private static List<SourceNetworkHeaderColumnHeaders> UNIQUE_KEYS_NETWORK_HEADER = new ArrayList<SourceNetworkHeaderColumnHeaders>();
+
+	private static List<SourceNetworkHeaderColumnHeaders> UNIQUE_KEYS_NETWORK_ACTIVITY = new ArrayList<SourceNetworkHeaderColumnHeaders>();
 
 	static {
-		UNIQUE_KEYS.add(SourceNetworkHeaderColumnHeaders.PROJECTNO);
-		UNIQUE_KEYS.add(SourceNetworkHeaderColumnHeaders.TASKNO);
+		UNIQUE_KEYS_NETWORK_HEADER.add(SourceNetworkHeaderColumnHeaders.PROJECTNO);
+		UNIQUE_KEYS_NETWORK_HEADER.add(SourceNetworkHeaderColumnHeaders.TASKNO);
+
+		UNIQUE_KEYS_NETWORK_ACTIVITY.add(SourceNetworkHeaderColumnHeaders.PROJECTNO);
+		UNIQUE_KEYS_NETWORK_ACTIVITY.add(SourceNetworkHeaderColumnHeaders.TASKNO);
+		UNIQUE_KEYS_NETWORK_ACTIVITY.add(SourceNetworkHeaderColumnHeaders.COST_TYPE);
 	}
 	static {
 
@@ -46,18 +52,18 @@ public class NetworkHeaderGenerator {
 		// Constants Add all the constants columns here so that they will be
 		// directly added to target WBS file.
 		destinationConstants.put(TargetNetworkHeaderColumnHeaders.DISPO, "001");
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.TERKZ, "1");
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.KLVARP, "PS02");
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.KLVARI, "PS03");
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.NW_PLANCOST, "0");
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.AUDISP, "1");
+		destinationConstants.put(TargetNetworkHeaderColumnHeaders.TERKZ, "");
+		destinationConstants.put(TargetNetworkHeaderColumnHeaders.KLVARP, "");
+		destinationConstants.put(TargetNetworkHeaderColumnHeaders.KLVARI, "");
+		destinationConstants.put(TargetNetworkHeaderColumnHeaders.NW_PLANCOST, "");
+		destinationConstants.put(TargetNetworkHeaderColumnHeaders.AUDISP, "");
 
 		// Blank Space Constants
 		// Constants Add all the Blank Spaces columns here so that they will be
 		// directly added to target WBS file.
 		// Blank Space Constants
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.GSTRP, "");
-		destinationConstants.put(TargetNetworkHeaderColumnHeaders.GLTRP, "");
+		// destinationConstants.put(TargetNetworkHeaderColumnHeaders.GSTRP, "");
+		// destinationConstants.put(TargetNetworkHeaderColumnHeaders.GLTRP, "");
 		destinationConstants.put(TargetNetworkHeaderColumnHeaders.TXJCD, "");
 		destinationConstants.put(TargetNetworkHeaderColumnHeaders.PLGRP, "");
 		destinationConstants.put(TargetNetworkHeaderColumnHeaders.KOSTV, "");
@@ -95,20 +101,20 @@ public class NetworkHeaderGenerator {
 		return headers;
 	}
 
-	public void deleteDuplicateRows(final Sheet sourceNetworkHeaderSheet, final Sheet destinationNetworkHeaderSheet) {
-		logger.debug(" entering deleteDuplicateRows ");
+	public void deleteDuplicateRowsForNetworkHeader(final Sheet sourceNetworkHeaderSheet, final Sheet destinationNetworkHeaderSheet) {
+		logger.debug(" entering deleteDuplicateRowsForNetworkHeader ");
 		ArrayList<String> headers = getColumnHeaders(sourceNetworkHeaderSheet);
 		ArrayList<Integer> uniqueKeyIndexes = new ArrayList<Integer>();
 		int indexCount = 0;
 		for (String headerName : headers) {
-			for (SourceNetworkHeaderColumnHeaders sourceNetworkHeaderColumnHeader : UNIQUE_KEYS) {
+			for (SourceNetworkHeaderColumnHeaders sourceNetworkHeaderColumnHeader : UNIQUE_KEYS_NETWORK_HEADER) {
 				if (headerName.equals(sourceNetworkHeaderColumnHeader.getColumnHeader())) {
 					uniqueKeyIndexes.add(indexCount);
 				}
 			}
 			indexCount++;
 		}
-		logger.debug(" in deleteDuplicateRows uniqueKeyIndexes " + uniqueKeyIndexes);
+		logger.debug(" in deleteDuplicateRowsForNetworkHeader uniqueKeyIndexes " + uniqueKeyIndexes);
 		Set<String> uniqueKeys = new HashSet<String>();
 		Set<Integer> uniqueRows = new TreeSet<Integer>();
 
@@ -121,16 +127,16 @@ public class NetworkHeaderGenerator {
 				uniqueKey.append(currentRow.getCell(uniqueKeyIndex).getStringCellValue());
 			}
 			if (!uniqueKeys.contains(uniqueKey.toString())) {
-				logger.debug(" in deleteDuplicateRows adding unique key record " + uniqueKey);
+				logger.debug(" in deleteDuplicateRowsForNetworkHeader adding unique key record " + uniqueKey);
 				uniqueKeys.add(uniqueKey.toString());
 				uniqueRows.add(currentRow.getRowNum());
 			}
 		}
 
 		int rowCount = 1;
-		logger.debug(" in deleteDuplicateRows entering uniqueRowsloop");
+		logger.debug(" in deleteDuplicateRowsForNetworkHeader entering uniqueRowsloop");
 		for (Integer uniqueRow : uniqueRows) {
-			logger.debug(" in deleteDuplicateRows processing uniqueRow with number " + uniqueRow);
+			logger.debug(" in deleteDuplicateRowsForNetworkHeader processing uniqueRow with number " + uniqueRow);
 			Row currentRow = sourceNetworkHeaderSheet.getRow(uniqueRow);
 			Row row = destinationNetworkHeaderSheet.createRow(rowCount);
 			int colNum = 0;
@@ -145,20 +151,21 @@ public class NetworkHeaderGenerator {
 			}
 			rowCount++;
 		}
-		logger.debug(" exiting deleteDuplicateRows ");
+		logger.debug(" exiting deleteDuplicateRowsForNetworkHeader ");
 	}
 
-	public void generateNetworkHeaderTargetFile(final File networkHeaderTargetSourceFile, final File networkHeaderNonDuplicateSourceFile,
-			final File destinationNetworkHeaderFile) throws Exception {
+	public void generateNetworkHeaderTargetFile(final File networkHeaderSourceFile, final File networkHeaderNonDuplicateSourceFile,
+			final File destinationNetworkHeaderFile)
+					throws Exception {
 		logger.debug("entering generateNetworkHeaderTargetFile ");
 
 		try {
 			// WBS source file with duplicates
-			FileInputStream networkHeaderSourceFileInputStream = new FileInputStream(networkHeaderTargetSourceFile);
+			FileInputStream networkHeaderSourceFileInputStream = new FileInputStream(networkHeaderSourceFile);
 
 			// Create Workbook instance holding reference to .xlsx file
 			Workbook networkHeaderSourceWorkbook = null;
-			if (networkHeaderTargetSourceFile.getName().endsWith(".xls")) {
+			if (networkHeaderSourceFile.getName().endsWith(".xls")) {
 				networkHeaderSourceWorkbook = new HSSFWorkbook(networkHeaderSourceFileInputStream);
 			} else {
 				networkHeaderSourceWorkbook = new XSSFWorkbook(networkHeaderSourceFileInputStream);
@@ -180,7 +187,7 @@ public class NetworkHeaderGenerator {
 				cell.setCellValue(header);
 			}
 			logger.debug("in generateNetworkHeaderTargetFile before deleting duplicate records");
-			deleteDuplicateRows(networkHeaderSourceSheet, networkHeaderNonDuplicateTargetSheet);
+			deleteDuplicateRowsForNetworkHeader(networkHeaderSourceSheet, networkHeaderNonDuplicateTargetSheet);
 			logger.debug("in generateNetworkHeaderTargetFile after deleting duplicate records");
 			FileOutputStream outputStream = new FileOutputStream(networkHeaderNonDuplicateSourceFile);
 			networkHeaderNonDuplicateWorkbook.write(outputStream);
@@ -213,6 +220,7 @@ public class NetworkHeaderGenerator {
 						.getNetworkHeaderWBSReferenceTable().get(uniqueKey);
 				if (networkHeaderWBSReferenceTable != null) {
 					Row targetNetworkHeaderRow = targetNetworkHeaderSheet.createRow(targetRowCount);
+					NetworkHeaderActivityReferenceTable networkHeaderActivityReferenceTable = new NetworkHeaderActivityReferenceTable();
 					for (TargetNetworkHeaderColumnHeaders targetNetworkHeaderColumnHeader : TargetNetworkHeaderColumnHeaders
 							.getColumnHeadersByIndex()) {
 
@@ -220,10 +228,14 @@ public class NetworkHeaderGenerator {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, START_SERIAL_NUMBER + targetRowCount, logger);
+							networkHeaderActivityReferenceTable
+							.setSerialNo(START_SERIAL_NUMBER + targetRowCount);
+							networkHeaderActivityReferenceTable.setKalid(networkHeaderWBSReferenceTable.getFabkl());
+							networkHeaderActivityReferenceTable
+							.setUser03(networkHeaderWBSReferenceTable.getUsr03());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
 									+ " serial no generated is " + (START_SERIAL_NUMBER + targetRowCount));
-						}
-						if (TargetNetworkHeaderColumnHeaders.KTEXT == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.KTEXT == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderNonDuplicateCurrentRow
@@ -231,72 +243,80 @@ public class NetworkHeaderGenerator {
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
 									+ " KTEXT is " + networkHeaderNonDuplicateCurrentRow.getCell(taskDescriptionColumnIndex)
 									.getStringCellValue());
-						}
-						if (TargetNetworkHeaderColumnHeaders.PROFID == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.PROFID == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getProfid(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
 									+ " PROFID is " + networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.PS_AUFART == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.PS_AUFART == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getPsAufart(), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PS_AUFART is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.WERKS == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.WERKS == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getWerks(), logger);
+							networkHeaderActivityReferenceTable.setWerks(networkHeaderWBSReferenceTable.getWerks());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " WERKS is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.PRONR == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.PRONR == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getIdent().substring(0, 9),
 									logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PRONR is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.PROJN == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.PROJN == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getIdent(), logger);
+							networkHeaderActivityReferenceTable.setIdent(networkHeaderWBSReferenceTable.getIdent());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PROJN is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.SCOPE == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.SCOPE == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getScope(), logger);
+							networkHeaderActivityReferenceTable.setScope(networkHeaderWBSReferenceTable.getScope());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " SCOPE is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.KALSM == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.KALSM == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getKalsm(), logger);
+							networkHeaderActivityReferenceTable.setKalsm(networkHeaderWBSReferenceTable.getKalsm());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " KALSM is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (TargetNetworkHeaderColumnHeaders.PRCTR == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.PRCTR == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getPrctr(), logger);
+							networkHeaderActivityReferenceTable.setPrctr(networkHeaderWBSReferenceTable.getPrctr());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " PRCTR is "
 									+ networkHeaderWBSReferenceTable.getPrctr());
-						}
-						if (TargetNetworkHeaderColumnHeaders.ZSCHL == targetNetworkHeaderColumnHeader) {
+						} else if (TargetNetworkHeaderColumnHeaders.ZSCHL == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getZschl(), logger);
+							networkHeaderActivityReferenceTable.setZschl(networkHeaderWBSReferenceTable.getZschl());
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " ZSCHL is "
 									+ networkHeaderWBSReferenceTable.getProfid());
-						}
-						if (destinationConstants.get(targetNetworkHeaderColumnHeader) != null) {
+						} else if (TargetNetworkHeaderColumnHeaders.GSTRP == targetNetworkHeaderColumnHeader) {
+							Cell cell = targetNetworkHeaderRow
+									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getGstrp(), logger);
+							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " ZSCHL is "
+									+ networkHeaderWBSReferenceTable.getProfid());
+						} else if (TargetNetworkHeaderColumnHeaders.GLTRP == targetNetworkHeaderColumnHeader) {
+							Cell cell = targetNetworkHeaderRow
+									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
+							ETLUtil.setCellValue(cell, networkHeaderWBSReferenceTable.getGltrp(), logger);
+							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount + " ZSCHL is "
+									+ networkHeaderWBSReferenceTable.getProfid());
+						} else if (destinationConstants.get(targetNetworkHeaderColumnHeader) != null) {
 							Cell desCell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
 							ETLUtil.setCellValue(desCell, destinationConstants.get(targetNetworkHeaderColumnHeader),
@@ -307,11 +327,15 @@ public class NetworkHeaderGenerator {
 
 					}
 					targetRowCount++;
+					ETLUtil.getNetworkHeaderActivityReferenceTableByProjectTaskNo().put(
+							networkHeaderWBSReferenceTable.getProjectNo() + networkHeaderWBSReferenceTable.getTaskNo(),
+							networkHeaderActivityReferenceTable);
 				}
 			}
 			FileOutputStream targetOutputStream = new FileOutputStream(destinationNetworkHeaderFile);
 			targetNetworkHeaderWorkbook.write(targetOutputStream);
 			targetOutputStream.close();
+
 
 		} catch (Exception e) {
 			logger.error(" in generateWBStargetFile() ", e);

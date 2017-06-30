@@ -21,7 +21,9 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.brilapps.etl.source.CostTypeReferenceTableExtractor;
 import com.brilapps.etl.source.ProjectDefinitionRefereceTableExtractor;
+import com.brilapps.etl.target.NetworkActivityGenerator;
 import com.brilapps.etl.target.NetworkHeaderGenerator;
 import com.brilapps.etl.target.ProjectDefinitionGenerator;
 import com.brilapps.etl.target.WBSGenerator;
@@ -132,7 +134,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		add(jButton6);
 		jButton6.addActionListener(this);
 
-		projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
+		/*projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
 		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
 		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
 		destinationFolderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents");
@@ -142,7 +144,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
 		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");
 		projectDefinitionReferenceTableFile = new File(
-				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
+				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");*/
 
 
 	}
@@ -245,6 +247,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		try {
 			new ProjectDefinitionRefereceTableExtractor()
 			.extractProjectDefinitionRefereceTable(projectDefinitionReferenceTableFile);
+			new CostTypeReferenceTableExtractor().extractCostTypeRefereceTable(projectDefinitionReferenceTableFile);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			logger.error("Error : ", e);
@@ -285,6 +288,9 @@ public class ETLMainClass extends JFrame implements ActionListener {
 			new NetworkHeaderGenerator().generateNetworkHeaderTargetFile(networkHeaderSourceFile,
 					new File(destinationFolder.getAbsolutePath() + "/NetworkHeaderNoDup.xls"),
 					new File(destinationFolder.getAbsolutePath() + "/NetworkHeaderTarget.xls"));
+			new NetworkActivityGenerator().generateNetworkActivityTargetFile(networkHeaderSourceFile,
+					new File(destinationFolder.getAbsolutePath() + "/NetworkActivityNoDup.xls"),
+					new File(destinationFolder.getAbsolutePath() + "/NetworkActivityTarget.xls"));
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			logger.error("Error : ", e);

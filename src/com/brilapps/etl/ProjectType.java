@@ -3,14 +3,12 @@ package com.brilapps.etl;
 import java.util.Arrays;
 import java.util.List;
 
-import com.brilapps.etl.target.TargetProjectDefinitionColumnHeaders;
-
 public enum ProjectType {
-	EB(2,"EB", "BP", Arrays.asList("Z000003"), "Z000001", "PS02", "OCOST", "01", 7001,"EB-00","14"),
-	EC(1,"EC", "CE", Arrays.asList("Z000001"),"Z000003", "ZS02", "PROFIT", "01",6001,"EC-00","30"),
-	ED(3,"ED", "IR", Arrays.asList("Z000003"), "Z000001", "PS02", "OCOST","01",9001,"ED-00","14"),
-	EG(4,"EG", "GE", Arrays.asList("Z000001"), "Z000003", "ZS02", "PROFIT", "01",5001,"EG-00","11"),
-	EI(5,"EI", "EF",Arrays.asList("Z000003", "Z002000"), "Z000001", "PS02", "OCOST", "01",8001,"EI-00","40");
+	EB(2,"EB", "BP", Arrays.asList("Z000003"), "Z000001", "PS02",   "01", 7001,"EB-00","14"),
+	EC(1,"EC", "CE", Arrays.asList("Z000001"),"Z000003", "ZS02",  "01",6001,"EC-00","30"),
+	ED(3,"ED", "IR", Arrays.asList("Z000003"), "Z000001", "PS02", "01",9001,"ED-00","14"),
+	EG(4,"EG", "GE", Arrays.asList("Z000001"), "Z000003", "ZS02",   "01",5001,"EG-00","11"),
+	EI(5,"EI", "EF",Arrays.asList("Z000003", "Z002000"), "Z000001", "PS02",   "01",8001,"EI-00","40");
 
 	private int projectTypeSerialNo;
 	private String projectPrefix;
@@ -18,7 +16,6 @@ public enum ProjectType {
 	private List<String> projectProfiles;
 	private String networkProfile;
 	private String networkType;
-	private String scope;
 	private String taxPurpose;
 	private String VTWEG;
 	private int pspidStartIndex;
@@ -26,7 +23,7 @@ public enum ProjectType {
 
 	private ProjectType(final int projectTypeSerialNo, final String projectPrefix, final String projectType,
 			final List<String> projectProfiles,
-			final String networkProfile, final String networkType, final String scope, final String VTWEG,
+			final String networkProfile, final String networkType,  final String VTWEG,
 			final int pspidStartIndex, final String PSPID_PREFIX, final String taxPurpose) {
 		this.projectTypeSerialNo = projectTypeSerialNo;
 		this.projectPrefix = projectPrefix;
@@ -34,7 +31,6 @@ public enum ProjectType {
 		this.projectProfiles = projectProfiles;
 		this.networkProfile = networkProfile;
 		this.networkType = networkType;
-		this.scope = scope;
 		this.VTWEG = VTWEG;
 		this.pspidStartIndex = pspidStartIndex;
 		this.PSPID_PREFIX = PSPID_PREFIX;
@@ -84,13 +80,6 @@ public enum ProjectType {
 	}
 
 	/**
-	 * @return the scope
-	 */
-	public String getScope() {
-		return scope;
-	}
-
-	/**
 	 * @return the vTWEG
 	 */
 	public String getVTWEG() {
@@ -116,20 +105,6 @@ public enum ProjectType {
 	 */
 	public String getPSPID_PREFIX() {
 		return PSPID_PREFIX;
-	}
-
-	public String getReferenceColumnValue(final TargetProjectDefinitionColumnHeaders generatorColumn) {
-
-		if(TargetProjectDefinitionColumnHeaders.VPROF.equals(generatorColumn)){
-			return getNetworkProfile();
-		}else if(TargetProjectDefinitionColumnHeaders.SCOPE.equals(generatorColumn)){
-			return getScope();
-		}else if(TargetProjectDefinitionColumnHeaders.VTWEG.equals(generatorColumn)){
-			return getVTWEG();
-		} else {
-			return null;
-		}
-
 	}
 
 	public static ProjectType getProjectTypeByProjectPrefix(final String projectPrefix) {
