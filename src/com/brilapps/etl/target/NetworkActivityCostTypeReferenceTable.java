@@ -4,6 +4,7 @@ public class NetworkActivityCostTypeReferenceTable {
 
 	String projectNo;
 	String taskNo;
+	String altTaskNo;
 	String costType;
 	String vornr;
 	String costTypeDescription;
@@ -97,6 +98,21 @@ public class NetworkActivityCostTypeReferenceTable {
 	 */
 	public void setCostTypeActualDescription(final String costTypeActualDescription) {
 		this.costTypeActualDescription = costTypeActualDescription;
+	}
+
+	/**
+	 * @return the altTaskNo
+	 */
+	public String getAltTaskNo() {
+		return altTaskNo;
+	}
+
+	/**
+	 * @param altTaskNo
+	 *            the altTaskNo to set
+	 */
+	public void setAltTaskNo(final String altTaskNo) {
+		this.altTaskNo = altTaskNo;
 	}
 
 }

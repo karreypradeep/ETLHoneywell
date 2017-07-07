@@ -134,17 +134,21 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		add(jButton6);
 		jButton6.addActionListener(this);
 
-		projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
-		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
-		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
-		destinationFolderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents");
+		projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectHeader.xls");
+		projectDefinitionSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectHeader.xls");
+
+		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectWBS.xls");
+		wbsSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectWBS.xls");
+
+		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectActualCosts.xlsx");
+		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectActualCosts.xlsx");
+
 		referenceTableJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
-		projectDefinitionSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/ProjectHeader.xls");
-		wbsSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS.xlsx");
-		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts.xlsx");
-		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");
 		projectDefinitionReferenceTableFile = new File(
 				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
+
+		destinationFolderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents");
+		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");
 
 
 	}
@@ -285,10 +289,12 @@ public class ETLMainClass extends JFrame implements ActionListener {
 
 	private void generateNetworkHeaderFile() {
 		try {
-			new NetworkHeaderGenerator().generateNetworkHeaderTargetFile(networkHeaderSourceFile,
+			new NetworkHeaderGenerator().generateNetworkHeaderTargetFile(projectDefinitionDestinationFile,
+					networkHeaderSourceFile,
 					new File(destinationFolder.getAbsolutePath() + "/NetworkHeaderNoDup.xls"),
 					new File(destinationFolder.getAbsolutePath() + "/NetworkHeaderTarget.xls"));
-			new NetworkActivityGenerator().generateNetworkActivityTargetFile(networkHeaderSourceFile,
+			new NetworkActivityGenerator().generateNetworkActivityTargetFile(projectDefinitionDestinationFile,
+					networkHeaderSourceFile,
 					new File(destinationFolder.getAbsolutePath() + "/NetworkActivityNoDup.xls"),
 					new File(destinationFolder.getAbsolutePath() + "/NetworkActivityTarget.xls"));
 		} catch (Exception e) {

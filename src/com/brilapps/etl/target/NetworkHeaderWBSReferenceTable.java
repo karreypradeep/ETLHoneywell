@@ -6,6 +6,7 @@ public class NetworkHeaderWBSReferenceTable {
 
 	String projectNo;
 	String taskNo;
+	String altTaskNo;
 	String ident;
 	String psAufart;
 	int werks;
@@ -259,6 +260,21 @@ public class NetworkHeaderWBSReferenceTable {
 	 */
 	public void setUsr03(final String usr03) {
 		this.usr03 = usr03;
+	}
+
+	/**
+	 * @return the altTaskNo
+	 */
+	public String getAltTaskNo() {
+		return altTaskNo;
+	}
+
+	/**
+	 * @param altTaskNo
+	 *            the altTaskNo to set
+	 */
+	public void setAltTaskNo(final String altTaskNo) {
+		this.altTaskNo = altTaskNo;
 	}
 
 	@Override

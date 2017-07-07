@@ -21,7 +21,7 @@ public class SourceNetworkHeaderExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue());
+				headers.add(currentCell.getStringCellValue().trim());
 			}
 			break;
 		}
@@ -36,7 +36,7 @@ public class SourceNetworkHeaderExtractor {
 			if (!headers.contains(sourceNetworkHeaderColumnHeader.getColumnHeader())) {
 				logger.error(ProjectDefinitionExtractor.class,
 						new Exception("Column " + sourceNetworkHeaderColumnHeader.getColumnHeader()
-								+ " missing in source Network Header file."));
+						+ " missing in source Network Header file."));
 			}
 		}
 		return headers;

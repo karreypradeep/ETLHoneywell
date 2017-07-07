@@ -40,7 +40,7 @@ public class ProjectDefinitionExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue());
+				headers.add(currentCell.getStringCellValue().trim());
 			}
 			break;
 		}
@@ -67,7 +67,7 @@ public class ProjectDefinitionExtractor {
 		for (int i = 0; i < currentRow.getLastCellNum(); i++) {
 			Cell currentCell = currentRow.getCell(i);
 			if (headerColumnIndex == cellCount && currentCell != null
-					&& currentCell.getStringCellValue().equals(projectType)) {
+					&& currentCell.getStringCellValue().trim().equals(projectType)) {
 				projectTypeRow = currentRow;
 			}
 			cellCount++;

@@ -79,7 +79,7 @@ public final class ETLUtil {
 		Object cellValue = null;
 		switch (cell.getCellType()) {
 		case Cell.CELL_TYPE_STRING:
-			cellValue = cell.getStringCellValue();
+			cellValue = cell.getStringCellValue().trim();
 			if (logger.isDebugEnabled()) {
 				logger.debug(" retrieving cell  String value " + cellValue);
 			}

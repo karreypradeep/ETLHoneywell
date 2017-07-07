@@ -284,7 +284,7 @@ public class ProjectDefinitionGenerator {
 			Row row = targetSheet.createRow(count + 1);
 			logger.debug(" in generateProjectDefinitionRows() created row " + (count + 1));
 			String pspid = "", projectNo = "";
-			String keyCode = projectTypeRow.getCell(sourceProjectDefinitionKeyCodeIndex).getStringCellValue();
+			String keyCode = projectTypeRow.getCell(sourceProjectDefinitionKeyCodeIndex).getStringCellValue().trim();
 			for (TargetProjectDefinitionColumnHeaders destinationHeader : TargetProjectDefinitionColumnHeaders
 					.getColumnHeadersByIndex()) {
 				// Serial Column
@@ -332,7 +332,7 @@ public class ProjectDefinitionGenerator {
 					if (TargetProjectDefinitionColumnHeaders.POST1 == destinationHeader) {
 						Cell projectNoCell = projectTypeRow.getCell(
 								sourceColumnHeadersIndexMap.get(SourceProjectDefinitionColumnHeaders.PROJECTNO));
-						projectNo = projectNoCell.getStringCellValue();
+						projectNo = projectNoCell.getStringCellValue().trim();
 						cellValue = projectNoCell.getStringCellValue().trim() + " - "
 								+ currentCell.getStringCellValue().trim();
 					} else {

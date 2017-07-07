@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -35,7 +34,7 @@ public class WBSGenerator {
 
 	static {
 		UNIQUE_KEYS.add(SourceWBSColumnHeaders.PROJECTNO);
-		UNIQUE_KEYS.add(SourceWBSColumnHeaders.TASKNO);
+		UNIQUE_KEYS.add(SourceWBSColumnHeaders.ALT_TASKNO);
 		UNIQUE_KEYS.add(SourceWBSColumnHeaders.PARENT_TASKNO);
 	}
 	static {
@@ -141,7 +140,7 @@ public class WBSGenerator {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue());
+				headers.add(currentCell.getStringCellValue().trim());
 			}
 			break;
 		}
@@ -149,11 +148,12 @@ public class WBSGenerator {
 		return headers;
 	}
 
-	public void deleteDuplicateRows(final Sheet sourceSheet, final Sheet destinationSheet) {
+	public void deleteDuplicateRows(final Sheet sourceSheet, final Sheet destinationSheet,
+			final Set<String> convertedProjectNos) {
 		logger.debug(" entering deleteDuplicateRows ");
 		ArrayList<String> headers = getColumnHeaders(sourceSheet);
 		ArrayList<Integer> uniqueKeyIndexes = new ArrayList<Integer>();
-		int lowLevelColumnIndex = -1;
+		int lowLevelColumnIndex = -1, taskNoIndex = -1, parentTaskNoIndex = -1, projectNoIndex = -1;
 		int indexCount = 0;
 		for (String headerName : headers) {
 			for (SourceWBSColumnHeaders sourceWBSColumnHeaders : UNIQUE_KEYS) {
@@ -164,12 +164,23 @@ public class WBSGenerator {
 			if (headerName.equals(SourceWBSColumnHeaders.LOW_LEVEL.toString())) {
 				lowLevelColumnIndex = indexCount;
 			}
+			if (headerName.equals(SourceWBSColumnHeaders.TASKNO.toString())) {
+				taskNoIndex = indexCount;
+			}
+			if (headerName.equals(SourceWBSColumnHeaders.PARENT_TASKNO.toString())) {
+				parentTaskNoIndex = indexCount;
+			}
+			if (headerName.equals(SourceWBSColumnHeaders.PROJECTNO.toString())) {
+				projectNoIndex = indexCount;
+			}
 			indexCount++;
 		}
 		logger.debug(" in deleteDuplicateRows uniqueKeyIndexes " + uniqueKeyIndexes);
 		logger.debug(" in deleteDuplicateRows lowLevelColumnIndex " + lowLevelColumnIndex);
 		Set<String> uniqueKeys = new HashSet<String>();
-		Set<Integer> uniqueRows = new TreeSet<Integer>();
+		//Set<Integer> uniqueRows = new TreeSet<Integer>();
+		Map<String, List<String>> level2TaskNosPerProjectNo = new HashMap<String, List<String>>();
+		Map<String, List<Row>> projectRows = new HashMap<String, List<Row>>();
 
 		Iterator<Row> iterator = sourceSheet.iterator();
 		iterator.next();
@@ -177,9 +188,9 @@ public class WBSGenerator {
 			Row currentRow = iterator.next();
 			StringBuffer uniqueKey = new StringBuffer("");
 			for (Integer uniqueKeyIndex : uniqueKeyIndexes) {
-				uniqueKey.append(currentRow.getCell(uniqueKeyIndex).getStringCellValue());
+				uniqueKey.append(currentRow.getCell(uniqueKeyIndex).getStringCellValue().trim());
 			}
-			String lowLevelValue = null;
+			String lowLevelValue = null, projectNo = null;
 			if (lowLevelColumnIndex > -1) {
 				Cell currentCell = currentRow.getCell(lowLevelColumnIndex);
 				if (currentCell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
@@ -188,16 +199,86 @@ public class WBSGenerator {
 					lowLevelValue = currentCell.getStringCellValue().trim();
 				}
 			}
-			if (!uniqueKeys.contains(uniqueKey.toString()) && lowLevelValue != null && !lowLevelValue.equals("01")) {
+			if (projectNoIndex > -1) {
+				Cell currentCell = currentRow.getCell(projectNoIndex);
+				projectNo = currentCell.getStringCellValue().trim();
+			}
+
+			if (convertedProjectNos.contains(projectNo) && !uniqueKeys.contains(uniqueKey.toString())
+					&& lowLevelValue != null && !lowLevelValue.equals("01")) {
 				logger.debug(" in deleteDuplicateRows adding unique key record " + uniqueKey);
 				uniqueKeys.add(uniqueKey.toString());
-				uniqueRows.add(currentRow.getRowNum());
+				//uniqueRows.add(currentRow.getRowNum());
+				if (lowLevelValue.equals("02")) {
+					if (level2TaskNosPerProjectNo.get(projectNo) != null && !level2TaskNosPerProjectNo.get(projectNo)
+							.contains(currentRow.getCell(taskNoIndex).getStringCellValue().trim())) {
+						level2TaskNosPerProjectNo.get(projectNo)
+						.add(currentRow.getCell(taskNoIndex).getStringCellValue().trim());
+					} else {
+						List<String> taskNos = new ArrayList<String>();
+						taskNos.add(currentRow.getCell(taskNoIndex).getStringCellValue().trim());
+						level2TaskNosPerProjectNo.put(projectNo, taskNos);
+					}
+					// level2ParentTaskNos.add(currentRow.getCell(taskNoIndex).getStringCellValue().trim());
+				}
+				if (projectRows.get(projectNo) != null) {
+					projectRows.get(projectNo).add(currentRow);
+				} else {
+					List<Row> rows = new ArrayList<Row>();
+					rows.add(currentRow);
+					projectRows.put(projectNo, rows);
+				}
 			}
 		}
 
 		int rowCount = 1;
 		logger.debug(" in deleteDuplicateRows entering uniqueRowsloop");
-		for (Integer uniqueRow : uniqueRows) {
+
+		List<Row> sortedRows = new ArrayList<Row>();
+		for (Map.Entry<String, List<String>> entry : level2TaskNosPerProjectNo.entrySet()) {
+			for (String taskNo : entry.getValue()) {
+				sortedRows = getRowsSortedForTaskNoOnLowLevel(projectRows.get(entry.getKey()), sortedRows,
+						taskNo,
+						"00000", taskNoIndex,
+						parentTaskNoIndex);
+				logger.debug(" in deleteDuplicateRows entering uniqueRowsloop");
+			}
+		}
+
+		for (Row  currentRow : sortedRows) {
+			Row row = destinationSheet.createRow(rowCount);
+			int colNum = 0;
+			currentRow.getLastCellNum();
+			//Iterator<Cell> cellIterator = currentRow.iterator();
+			for (int i = 0; i < currentRow.getLastCellNum(); i++) {
+				Cell currentCell = currentRow.getCell(i);
+				Object cellValue = ETLUtil.getCellValue(currentCell, logger);
+				Cell desCell = row.createCell(colNum);
+				ETLUtil.setCellValue(desCell, cellValue, logger);
+				colNum++;
+			}
+			rowCount++;
+		}
+
+
+		/*for (Map.Entry<String, List<Row>> entry : projectRows.entrySet()) {
+			for (Row  currentRow : entry.getValue()) {
+				Row row = destinationSheet.createRow(rowCount);
+				int colNum = 0;
+				currentRow.getLastCellNum();
+				//Iterator<Cell> cellIterator = currentRow.iterator();
+				for (int i = 0; i < currentRow.getLastCellNum(); i++) {
+					Cell currentCell = currentRow.getCell(i);
+					Object cellValue = ETLUtil.getCellValue(currentCell, logger);
+					Cell desCell = row.createCell(colNum);
+					ETLUtil.setCellValue(desCell, cellValue, logger);
+					colNum++;
+				}
+				rowCount++;
+			}
+		}*/
+
+		/*for (Integer uniqueRow : uniqueRows) {
 			logger.debug(" in deleteDuplicateRows processing uniqueRow with number " + uniqueRow);
 			Row currentRow = sourceSheet.getRow(uniqueRow);
 			Row row = destinationSheet.createRow(rowCount);
@@ -212,8 +293,23 @@ public class WBSGenerator {
 				colNum++;
 			}
 			rowCount++;
-		}
+		}*/
+
 		logger.debug(" exiting deleteDuplicateRows ");
+	}
+
+	private List<Row> getRowsSortedForTaskNoOnLowLevel(final List<Row> allRows, final List<Row> sortedRows,
+			final String taskNo, final String parentTaskNo, final int taskNoIndex, final int parentTaskNoIndex) {
+
+		for (Row row : allRows) {
+			if ((taskNo == null || taskNo.equals(row.getCell(taskNoIndex).getStringCellValue().trim()))
+					&& parentTaskNo.equals(row.getCell(parentTaskNoIndex).getStringCellValue().trim())) {
+				sortedRows.add(row);
+				getRowsSortedForTaskNoOnLowLevel(allRows, sortedRows, null,
+						row.getCell(taskNoIndex).getStringCellValue().trim(), taskNoIndex, parentTaskNoIndex);
+			}
+		}
+		return sortedRows;
 	}
 
 	public void generateWBStargetFile(final File wbsSourceFile, final File wbsNonDuplicateSourceFile,
@@ -222,39 +318,7 @@ public class WBSGenerator {
 
 		try {
 			WBSGenerator wBSExtractor = new WBSGenerator();
-			// WBS source file with duplicates
-			FileInputStream wbsSourceFileInputStream = new FileInputStream(wbsSourceFile);
-
-			// Create Workbook instance holding reference to .xlsx file
-			Workbook wbsSourceWorkbook = null;
-			if (wbsSourceFile.getName().endsWith(".xls")) {
-				wbsSourceWorkbook = new HSSFWorkbook(wbsSourceFileInputStream);
-			} else {
-				wbsSourceWorkbook = new XSSFWorkbook(wbsSourceFileInputStream);
-			}
-			Sheet wbsSourceSheet = wbsSourceWorkbook.getSheetAt(0);
-			logger.debug("in generateWBStargetFile before validateColumnHeaders");
-			validateColumnHeaders(wbsSourceSheet);
-			logger.debug("in generateWBStargetFile after validateColumnHeaders");
-
-			Workbook wbsNonDuplicateWorkbook = new HSSFWorkbook();
-			Sheet wbsNonDuplicateTargetSheet = wbsNonDuplicateWorkbook.createSheet(wbsSourceSheet.getSheetName());
-			// writeHeaderColumns
-			Row row = wbsNonDuplicateTargetSheet.createRow(0);
 			int colNum = 0;
-			Map<String,Integer> wbsSourceHeaderColumnIndexMap = new HashMap<String,Integer>();
-			for (String header : wBSExtractor.getColumnHeaders(wbsSourceSheet)) {
-				wbsSourceHeaderColumnIndexMap.put(header, colNum);
-				Cell cell = row.createCell(colNum++);
-				cell.setCellValue(header);
-			}
-			logger.debug("in generateWBStargetFile before deleting duplicate records");
-			wBSExtractor.deleteDuplicateRows(wbsSourceSheet, wbsNonDuplicateTargetSheet);
-			logger.debug("in generateWBStargetFile after deleting duplicate records");
-			FileOutputStream outputStream = new FileOutputStream(wbsNonDuplicateSourceFile);
-			wbsNonDuplicateWorkbook.write(outputStream);
-			outputStream.close();
-			wbsSourceFileInputStream.close();
 
 			FileInputStream pdDestinationFileInputStream = new FileInputStream(projectDefinitionDesFile);
 
@@ -280,10 +344,48 @@ public class WBSGenerator {
 				Row currentRow = iterator.next();
 				String projectNo = currentRow
 						.getCell(TargetProjectDefinitionColumnHeaders.PROJECTNO.getColumnIndex() - 1)
-						.getStringCellValue();
+						.getStringCellValue().trim();
 				projectDefinitionRowsMap.put(projectNo.trim(), currentRow);
 			}
 			pdDestinationFileInputStream.close();
+
+			// WBS source file with duplicates
+			FileInputStream wbsSourceFileInputStream = new FileInputStream(wbsSourceFile);
+
+			// Create Workbook instance holding reference to .xlsx file
+			Workbook wbsSourceWorkbook = null;
+			if (wbsSourceFile.getName().endsWith(".xls")) {
+				wbsSourceWorkbook = new HSSFWorkbook(wbsSourceFileInputStream);
+			} else {
+				wbsSourceWorkbook = new XSSFWorkbook(wbsSourceFileInputStream);
+			}
+			Sheet wbsSourceSheet = wbsSourceWorkbook.getSheetAt(0);
+			logger.debug("in generateWBStargetFile before validateColumnHeaders");
+			validateColumnHeaders(wbsSourceSheet);
+			logger.debug("in generateWBStargetFile after validateColumnHeaders");
+
+			Workbook wbsNonDuplicateWorkbook = new HSSFWorkbook();
+			Sheet wbsNonDuplicateTargetSheet = wbsNonDuplicateWorkbook.createSheet(wbsSourceSheet.getSheetName());
+			// writeHeaderColumns
+			Row row = wbsNonDuplicateTargetSheet.createRow(0);
+			Map<String,Integer> wbsSourceHeaderColumnIndexMap = new HashMap<String,Integer>();
+			colNum = 0;
+			for (String header : wBSExtractor.getColumnHeaders(wbsSourceSheet)) {
+				wbsSourceHeaderColumnIndexMap.put(header, colNum);
+				Cell cell = row.createCell(colNum++);
+				cell.setCellValue(header);
+			}
+			// *********************************************deleteDuplicateRows
+			logger.debug("in generateWBStargetFile before deleting duplicate records");
+			wBSExtractor.deleteDuplicateRows(wbsSourceSheet, wbsNonDuplicateTargetSheet,
+					projectDefinitionRowsMap.keySet());
+			// *********************************************deleteDuplicateRows
+
+			logger.debug("in generateWBStargetFile after deleting duplicate records");
+			FileOutputStream outputStream = new FileOutputStream(wbsNonDuplicateSourceFile);
+			wbsNonDuplicateWorkbook.write(outputStream);
+			outputStream.close();
+			wbsSourceFileInputStream.close();
 
 			// Iterate through each row in non duplicate WBS file
 			Workbook targetWBSWorkbook = new HSSFWorkbook();
@@ -303,7 +405,7 @@ public class WBSGenerator {
 				// Project Number Cell in index 0
 				int projectNoIndex = wbsSourceHeaderColumnIndexMap
 						.get(SourceWBSColumnHeaders.PROJECTNO.getColumnHeader());
-				String projectNo = wbsNonDuplicateCurrentRow.getCell(projectNoIndex).getStringCellValue();
+				String projectNo = wbsNonDuplicateCurrentRow.getCell(projectNoIndex).getStringCellValue().trim();
 				logger.debug("in generateWBStargetFile processing " + projectNo);
 				// Get the corresponding project definition record of the
 				// generated file
@@ -314,21 +416,27 @@ public class WBSGenerator {
 					// used to generate network header target file.
 					NetworkHeaderWBSReferenceTable networkHeaderWBSReferenceTable = new NetworkHeaderWBSReferenceTable();
 					networkHeaderWBSReferenceTable.setProjectNo(projectNo);
+					networkHeaderWBSReferenceTable
+					.setAltTaskNo(wbsNonDuplicateCurrentRow
+							.getCell(wbsSourceHeaderColumnIndexMap
+									.get(SourceWBSColumnHeaders.ALT_TASKNO.getColumnHeader()))
+							.getStringCellValue().trim());
 					List<Row> targetWBSRows = new ArrayList<Row>();
 					int pdTargetProjectTypeIndex = pdTargetHeaderColumnIndexMap
 							.get(TargetProjectDefinitionColumnHeaders.PROJECT_TYPE.getColumnHeader());
 					Cell projectTypeCell = correspondingProjectDefinitionRow.getCell(pdTargetProjectTypeIndex);
 					ProjectType projectType = null;
-					if (projectTypeCell != null && projectTypeCell.getStringCellValue() != null) {
-						projectType = ProjectType.getProjectTypeByProjectPrefix(projectTypeCell.getStringCellValue());
+					if (projectTypeCell != null && projectTypeCell.getStringCellValue().trim() != null) {
+						projectType = ProjectType
+								.getProjectTypeByProjectPrefix(projectTypeCell.getStringCellValue().trim());
 					}
 
 					int revenueColumnIndex = pdTargetHeaderColumnIndexMap
 							.get(TargetProjectDefinitionColumnHeaders.PD_REVENUE.getColumnHeader());
 					Cell revenueCell = correspondingProjectDefinitionRow.getCell(revenueColumnIndex);
 					String pdRevenue = null;
-					if (revenueCell != null && revenueCell.getStringCellValue() != null) {
-						pdRevenue = revenueCell.getStringCellValue();
+					if (revenueCell != null && revenueCell.getStringCellValue().trim() != null) {
+						pdRevenue = revenueCell.getStringCellValue().trim();
 					}
 					boolean addNetworkHeaderRows = true;
 					// if record is not already added then create 2 or three
@@ -392,7 +500,7 @@ public class WBSGenerator {
 									ETLUtil.setCellValue(desCell, Integer.valueOf(wbsNonDuplicateCurrentRow
 											.getCell(wbsSourceHeaderColumnIndexMap
 													.get(SourceWBSColumnHeaders.LOW_LEVEL.getColumnHeader()))
-											.getStringCellValue()) + 1, logger);
+											.getStringCellValue().trim()) + 1, logger);
 								}
 							}
 							if (TargetWBSColumnHeaders.BELKZ == targetWBSColumnHeader) {
@@ -415,24 +523,25 @@ public class WBSGenerator {
 									ETLUtil.setCellValue(desCell, correspondingProjectDefinitionRow
 											.getCell(pdTargetHeaderColumnIndexMap
 													.get(TargetProjectDefinitionColumnHeaders.PSPID.getColumnHeader()))
-											.getStringCellValue() + "-BILL1", logger);
+											.getStringCellValue().trim() + "-BILL1", logger);
 								} else {
 									ETLUtil.setCellValue(desCell, correspondingProjectDefinitionRow
 											.getCell(pdTargetHeaderColumnIndexMap
 													.get(TargetProjectDefinitionColumnHeaders.PSPID.getColumnHeader()))
-											.getStringCellValue() + "-"
+											.getStringCellValue().trim() + "-"
 											+ wbsNonDuplicateCurrentRow.getCell(
 													wbsSourceHeaderColumnIndexMap
 													.get(SourceWBSColumnHeaders.TASKNO.getColumnHeader()))
-											.getStringCellValue(),
+											.getStringCellValue().trim(),
 											logger);
 									networkHeaderWBSReferenceTable
 									.setTaskNo(wbsNonDuplicateCurrentRow.getCell(wbsSourceHeaderColumnIndexMap
 											.get(SourceWBSColumnHeaders.TASKNO.getColumnHeader()))
-											.getStringCellValue());
-									networkHeaderWBSReferenceTable.setIdent(desCell.getStringCellValue());
+											.getStringCellValue().trim());
+									networkHeaderWBSReferenceTable.setIdent(desCell.getStringCellValue().trim());
 									logger.debug(
-											"in generateWBStargetFile adding IDENT " + desCell.getStringCellValue());
+											"in generateWBStargetFile adding IDENT "
+													+ desCell.getStringCellValue().trim());
 								}
 							}
 
@@ -448,7 +557,8 @@ public class WBSGenerator {
 								} else if (projectWiseRowCount == 2 && targetWBSRows.size() > 1) {
 									ETLUtil.setCellValue(desCell, "BILLING", logger);
 									logger.debug(
-											"in generateWBStargetFile adding POST1 " + desCell.getStringCellValue());
+											"in generateWBStargetFile adding POST1 "
+													+ desCell.getStringCellValue().trim());
 								} else {
 									Object post1 = ETLUtil.getCellValue(
 											wbsNonDuplicateCurrentRow.getCell(wbsSourceHeaderColumnIndexMap
@@ -515,9 +625,9 @@ public class WBSGenerator {
 								Cell desCell = targetWBSRow.createCell(targetWBSColumnHeader.getColumnIndex() - 1);
 								ETLUtil.setCellValue(desCell, destinationConstants.get(targetWBSColumnHeader), logger);
 								if (TargetWBSColumnHeaders.KALSM == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setKalsm(desCell.getStringCellValue());
+									networkHeaderWBSReferenceTable.setKalsm(desCell.getStringCellValue().trim());
 								} else if (TargetWBSColumnHeaders.ZSCHL == targetWBSColumnHeader) {
-									networkHeaderWBSReferenceTable.setZschl(desCell.getStringCellValue());
+									networkHeaderWBSReferenceTable.setZschl(desCell.getStringCellValue().trim());
 								}
 							}
 						}
@@ -526,7 +636,8 @@ public class WBSGenerator {
 					// targetRowCount++;
 					if (addNetworkHeaderRows) {
 						ETLUtil.getNetworkHeaderWBSReferenceTable().put(
-								networkHeaderWBSReferenceTable.getProjectNo() + networkHeaderWBSReferenceTable.getTaskNo(),
+								networkHeaderWBSReferenceTable.getProjectNo()
+								+ networkHeaderWBSReferenceTable.getAltTaskNo(),
 								networkHeaderWBSReferenceTable);
 					}
 				}

@@ -69,17 +69,17 @@ public class ProjectDefinitionRefereceTableExtractor {
 					int columnIndex = pdReferenceTableColumnIndexMap.get(entry.getKey());
 					if (ProjectDefinitionReferenceTableColumnHeaders.PROJECT_PRIFIX.getColumnHeader()
 							.equals(entry.getKey())) {
-						projectPrefix = currentRow.getCell(columnIndex).getStringCellValue();
+						projectPrefix = currentRow.getCell(columnIndex).getStringCellValue().trim();
 						projectDefinitionReferenceTable
 						.setProjectPrefix(projectPrefix);
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PROJECT_PROFILE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setProjectProfile(currentRow.getCell(columnIndex).getStringCellValue());
+						.setProjectProfile(currentRow.getCell(columnIndex).getStringCellValue().trim());
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PROJECT_TYPE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setProjectType(currentRow.getCell(columnIndex).getStringCellValue());
+								.setProjectType(currentRow.getCell(columnIndex).getStringCellValue().trim());
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.TAX_PURPOSE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
@@ -87,18 +87,19 @@ public class ProjectDefinitionRefereceTableExtractor {
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.NETWORK_PROFILE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setNetworkProfile(currentRow.getCell(columnIndex).getStringCellValue());
+								.setNetworkProfile(currentRow.getCell(columnIndex).getStringCellValue().trim());
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.NETWORK_TYPE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setNetworkType(currentRow.getCell(columnIndex).getStringCellValue());
+								.setNetworkType(currentRow.getCell(columnIndex).getStringCellValue().trim());
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.SCOPE.getColumnHeader()
 							.equals(entry.getKey())) {
-						projectDefinitionReferenceTable.setScope(currentRow.getCell(columnIndex).getStringCellValue());
+						projectDefinitionReferenceTable
+								.setScope(currentRow.getCell(columnIndex).getStringCellValue().trim());
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PSPID_PREFIX.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setPspidPrefix(currentRow.getCell(columnIndex).getStringCellValue());
+								.setPspidPrefix(currentRow.getCell(columnIndex).getStringCellValue().trim());
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.SERIAL_NO_START_INDEX.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
@@ -147,7 +148,7 @@ public class ProjectDefinitionRefereceTableExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue());
+				headers.add(currentCell.getStringCellValue().trim());
 			}
 			break;
 		}
