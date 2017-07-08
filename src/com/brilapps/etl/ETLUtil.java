@@ -103,6 +103,11 @@ public final class ETLUtil {
 				}
 			} else {
 				cellValue = cell.getNumericCellValue();
+				if (cellValue instanceof Double) {
+					cellValue = ((Double) cellValue).intValue();
+				} else if (cellValue instanceof Long) {
+					cellValue = ((Long) cellValue).intValue();
+				}
 				if (logger.isDebugEnabled()) {
 					logger.debug(" retrieving cell  Numeriv value " + cellValue);
 				}
@@ -125,6 +130,21 @@ public final class ETLUtil {
 
 		}
 		return cellValue;
+	}
+
+	public static String getCellValueAsString(final Cell cell, final Logger logger) {
+
+		Object cellValue = getCellValue(cell, logger);
+		if (cell == null) {
+			return "";
+		}
+		String cellValueString = "";
+		if (cellValue instanceof Number) {
+			cellValueString = Integer.valueOf(cellValue + "") + "";
+		} else {
+			cellValueString = cellValue.toString();
+		}
+		return cellValueString.trim();
 	}
 
 	public static void setCellValue(final Cell cell, final Object cellValue, final Logger logger) {

@@ -8,6 +8,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import com.brilapps.etl.ETLUtil;
+
 public class SourceNetworkHeaderExtractor {
 
 	static Logger logger = Logger.getLogger(SourceNetworkHeaderExtractor.class);
@@ -21,7 +23,7 @@ public class SourceNetworkHeaderExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue().trim());
+				headers.add(ETLUtil.getCellValueAsString(currentCell, logger));
 			}
 			break;
 		}

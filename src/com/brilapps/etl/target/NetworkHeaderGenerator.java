@@ -89,7 +89,7 @@ public class NetworkHeaderGenerator {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue().trim());
+				headers.add(ETLUtil.getCellValueAsString(currentCell, logger));
 			}
 			break;
 		}
@@ -125,11 +125,11 @@ public class NetworkHeaderGenerator {
 			Row currentRow = iterator.next();
 			StringBuffer uniqueKey = new StringBuffer("");
 			for (Integer uniqueKeyIndex : uniqueKeyIndexes) {
-				uniqueKey.append(currentRow.getCell(uniqueKeyIndex).getStringCellValue().trim());
+				uniqueKey.append(ETLUtil.getCellValueAsString(currentRow.getCell(uniqueKeyIndex), logger));
 			}
 			if (projectNoIndex > -1) {
 				Cell currentCell = currentRow.getCell(projectNoIndex);
-				projectNo = currentCell.getStringCellValue().trim();
+				projectNo = ETLUtil.getCellValueAsString(currentCell, logger);
 			}
 			if (convertedProjectNos.contains(projectNo) && !uniqueKeys.contains(uniqueKey.toString())) {
 				logger.debug(" in deleteDuplicateRowsForNetworkHeader adding unique key record " + uniqueKey);
@@ -183,9 +183,9 @@ public class NetworkHeaderGenerator {
 			iterator.next();
 			while (iterator.hasNext()) {
 				Row currentRow = iterator.next();
-				String projectNo = currentRow
-						.getCell(TargetProjectDefinitionColumnHeaders.PROJECTNO.getColumnIndex() - 1)
-						.getStringCellValue().trim();
+				String projectNo = ETLUtil.getCellValueAsString(
+						currentRow.getCell(TargetProjectDefinitionColumnHeaders.PROJECTNO.getColumnIndex() - 1),
+						logger);
 				convertedProjectNos.add(projectNo.trim());
 			}
 			pdDestinationFileInputStream.close();
@@ -246,9 +246,10 @@ public class NetworkHeaderGenerator {
 					.get(SourceNetworkHeaderColumnHeaders.TASK_DESCRIPTION.toString());
 			while (networkHeaderNonDuplicateSheetIterator.hasNext()) {
 				Row networkHeaderNonDuplicateCurrentRow = networkHeaderNonDuplicateSheetIterator.next();
-				String uniqueKey = networkHeaderNonDuplicateCurrentRow.getCell(projectNoColumnIndex)
-						.getStringCellValue().trim()
-						+ networkHeaderNonDuplicateCurrentRow.getCell(altTaskNoColumnIndex).getStringCellValue().trim();
+				String uniqueKey = ETLUtil
+						.getCellValueAsString(networkHeaderNonDuplicateCurrentRow.getCell(projectNoColumnIndex), logger)
+						+ ETLUtil.getCellValueAsString(
+								networkHeaderNonDuplicateCurrentRow.getCell(altTaskNoColumnIndex), logger);
 				NetworkHeaderWBSReferenceTable networkHeaderWBSReferenceTable = ETLUtil
 						.getNetworkHeaderWBSReferenceTable().get(uniqueKey);
 				if (networkHeaderWBSReferenceTable != null) {
@@ -271,11 +272,13 @@ public class NetworkHeaderGenerator {
 						} else if (TargetNetworkHeaderColumnHeaders.KTEXT == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
-							ETLUtil.setCellValue(cell, networkHeaderNonDuplicateCurrentRow
-									.getCell(taskDescriptionColumnIndex).getStringCellValue().trim(), logger);
+							ETLUtil.setCellValue(cell, ETLUtil.getCellValueAsString(networkHeaderNonDuplicateCurrentRow
+									.getCell(taskDescriptionColumnIndex),logger), logger);
 							logger.debug(" in generateProjectDefinitionRows() for row " + targetRowCount
-									+ " KTEXT is " + networkHeaderNonDuplicateCurrentRow.getCell(taskDescriptionColumnIndex)
-									.getStringCellValue().trim());
+									+ " KTEXT is "
+									+ ETLUtil.getCellValueAsString(
+											networkHeaderNonDuplicateCurrentRow.getCell(taskDescriptionColumnIndex),
+											logger));
 						} else if (TargetNetworkHeaderColumnHeaders.PROFID == targetNetworkHeaderColumnHeader) {
 							Cell cell = targetNetworkHeaderRow
 									.createCell(targetNetworkHeaderColumnHeader.getColumnIndex() - 1);
@@ -356,7 +359,7 @@ public class NetworkHeaderGenerator {
 									logger);
 							logger.debug("in generateWBStargetFile adding constant column  "
 									+ targetNetworkHeaderColumnHeader.getColumnHeader()
-									+ desCell.getStringCellValue().trim());
+									+ ETLUtil.getCellValueAsString(desCell, logger));
 						}
 
 					}

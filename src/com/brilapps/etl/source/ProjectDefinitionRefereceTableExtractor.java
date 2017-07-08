@@ -69,45 +69,50 @@ public class ProjectDefinitionRefereceTableExtractor {
 					int columnIndex = pdReferenceTableColumnIndexMap.get(entry.getKey());
 					if (ProjectDefinitionReferenceTableColumnHeaders.PROJECT_PRIFIX.getColumnHeader()
 							.equals(entry.getKey())) {
-						projectPrefix = currentRow.getCell(columnIndex).getStringCellValue().trim();
+						projectPrefix = ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger);
 						projectDefinitionReferenceTable
 						.setProjectPrefix(projectPrefix);
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PROJECT_PROFILE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setProjectProfile(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setProjectProfile(
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PROJECT_TYPE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-								.setProjectType(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setProjectType(ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.TAX_PURPOSE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setTaxPurpose((int) currentRow.getCell(columnIndex).getNumericCellValue());
+						.setTaxPurpose(Integer.valueOf(
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger)));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.NETWORK_PROFILE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-								.setNetworkProfile(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setNetworkProfile(
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.NETWORK_TYPE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-								.setNetworkType(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setNetworkType(ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.SCOPE.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-								.setScope(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setScope(ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PSPID_PREFIX.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-								.setPspidPrefix(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setPspidPrefix(ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.SERIAL_NO_START_INDEX.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setSerialNoStartIndex((int) currentRow.getCell(columnIndex).getNumericCellValue());
+						.setSerialNoStartIndex(Integer.valueOf(
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger)));
 					} else if (ProjectDefinitionReferenceTableColumnHeaders.PSPID_START_INDEX.getColumnHeader()
 							.equals(entry.getKey())) {
 						projectDefinitionReferenceTable
-						.setPspidStartIndex((int) currentRow.getCell(columnIndex).getNumericCellValue());
+						.setPspidStartIndex(Integer.valueOf(
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger)));
 					}
 				}
 				ETLUtil.getProjectDefinitionReferenceTableByProjectPrefix().put(projectPrefix,
@@ -148,7 +153,7 @@ public class ProjectDefinitionRefereceTableExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue().trim());
+				headers.add(ETLUtil.getCellValueAsString(currentCell, logger));
 			}
 			break;
 		}

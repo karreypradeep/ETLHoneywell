@@ -68,17 +68,18 @@ public class CostTypeReferenceTableExtractor {
 					int columnIndex = pdReferenceTableColumnIndexMap.get(entry.getKey());
 					if (CostTypeReferenceTableColumnHeaders.COST_TYPE.getColumnHeader()
 							.equals(entry.getKey())) {
-						costType = currentRow.getCell(columnIndex).getStringCellValue().trim();
+						costType = ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger);
 						costTypeReferenceTable.setCostType(costType);
 					} else if (CostTypeReferenceTableColumnHeaders.COST_TYPE_DESCRIPTION.getColumnHeader()
 							.equals(entry.getKey())) {
 						costTypeReferenceTable
-						.setCostTypeDescription(currentRow.getCell(columnIndex).getStringCellValue().trim());
+						.setCostTypeDescription(
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					} else if (CostTypeReferenceTableColumnHeaders.COST_TYPE_ACTUAL_DESCRIPTION.getColumnHeader()
 							.equals(entry.getKey())) {
 						costTypeReferenceTable
 						.setCostTypeActualDescription(
-								currentRow.getCell(columnIndex).getStringCellValue().trim());
+								ETLUtil.getCellValueAsString(currentRow.getCell(columnIndex), logger));
 					}
 				}
 				ETLUtil.getCostTypeReferenceTableByCostType().put(costType, costTypeReferenceTable);
@@ -118,7 +119,7 @@ public class CostTypeReferenceTableExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue().trim());
+				headers.add(ETLUtil.getCellValueAsString(currentCell, logger));
 			}
 			break;
 		}

@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import com.brilapps.etl.ETLUtil;
 import com.brilapps.etl.ProjectConstants;
 
 public class ProjectDefinitionExtractor {
@@ -40,7 +41,7 @@ public class ProjectDefinitionExtractor {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue().trim());
+				headers.add(ETLUtil.getCellValueAsString(currentCell, logger));
 			}
 			break;
 		}
@@ -67,7 +68,7 @@ public class ProjectDefinitionExtractor {
 		for (int i = 0; i < currentRow.getLastCellNum(); i++) {
 			Cell currentCell = currentRow.getCell(i);
 			if (headerColumnIndex == cellCount && currentCell != null
-					&& currentCell.getStringCellValue().trim().equals(projectType)) {
+					&& ETLUtil.getCellValueAsString(currentCell, logger).equals(projectType)) {
 				projectTypeRow = currentRow;
 			}
 			cellCount++;

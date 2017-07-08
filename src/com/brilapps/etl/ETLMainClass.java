@@ -134,14 +134,16 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		add(jButton6);
 		jButton6.addActionListener(this);
 
-		projectDefinitionJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectHeader.xls");
-		projectDefinitionSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectHeader.xls");
+		projectDefinitionJTextField
+				.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectHeader_MOCK2_Updated_LOAD.xlsx");
+		projectDefinitionSourceFile = new File(
+				"C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectHeader_MOCK2_Updated_LOAD.xlsx");
 
-		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectWBS.xls");
-		wbsSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectWBS.xls");
+		wbsJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS_Mock2.xlsx");
+		wbsSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectWBS_Mock2.xlsx");
 
-		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectActualCosts.xlsx");
-		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPUKProjectActualCosts.xlsx");
+		networkHeaderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts_Mock2.xlsx");
+		networkHeaderSourceFile = new File("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectActualCosts_Mock2.xlsx");
 
 		referenceTableJTextField.setText("C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
 		projectDefinitionReferenceTableFile = new File(
@@ -176,6 +178,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 				}
 			} else if (event.getSource() == networkHeaderJButton) {
 				FileFilter filter = new FileNameExtensionFilter("excel", "xls", "xlsx");
+				// fileChooser.setCurrentDirectory("");
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setFileFilter(filter);
 				int x = fileChooser.showOpenDialog(null);

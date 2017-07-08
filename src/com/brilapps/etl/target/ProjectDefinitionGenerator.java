@@ -50,8 +50,8 @@ public class ProjectDefinitionGenerator {
 				SourceProjectDefinitionColumnHeaders.COMPANY_CODE);
 		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.WERKS,
 				SourceProjectDefinitionColumnHeaders.COMPANY_CODE);
-		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.VKORG,
-				SourceProjectDefinitionColumnHeaders.COMPANY_CODE);
+		// destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.VKORG,
+		// SourceProjectDefinitionColumnHeaders.COMPANY_CODE);
 		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.PRCTR,
 				SourceProjectDefinitionColumnHeaders.PROFIT_CENTER);
 		destinationSourceCloumnMaps.put(TargetProjectDefinitionColumnHeaders.PROJECTNO,
@@ -66,7 +66,8 @@ public class ProjectDefinitionGenerator {
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.KIMSK, "");
 		// destinationConstants.put(TargetProjectDefinitionColumnHeaders.VERNR,
 		// 999999);
-		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VTWEG, "01");
+		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VKORG, "");
+		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VTWEG, "");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.ZTEHT, "D");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.VKOKR, "AERO");
 		destinationConstants.put(TargetProjectDefinitionColumnHeaders.PPROF, "Z00001");
@@ -284,7 +285,9 @@ public class ProjectDefinitionGenerator {
 			Row row = targetSheet.createRow(count + 1);
 			logger.debug(" in generateProjectDefinitionRows() created row " + (count + 1));
 			String pspid = "", projectNo = "";
-			String keyCode = projectTypeRow.getCell(sourceProjectDefinitionKeyCodeIndex).getStringCellValue().trim();
+
+			String keyCode = ETLUtil.getCellValueAsString(projectTypeRow.getCell(sourceProjectDefinitionKeyCodeIndex),
+					logger);
 			for (TargetProjectDefinitionColumnHeaders destinationHeader : TargetProjectDefinitionColumnHeaders
 					.getColumnHeadersByIndex()) {
 				// Serial Column
@@ -311,9 +314,15 @@ public class ProjectDefinitionGenerator {
 							sourceColumnHeadersIndexMap.get(SourceProjectDefinitionColumnHeaders.COMPANY_CODE));
 					Object cellValue = ETLUtil.getCellValue(companyCodeNoCell, logger);
 					Cell desCell = row.createCell(colNum);
-					if (cellValue != null && (double) cellValue == 2040) {
+					int companyCode = 0;
+					if (cellValue instanceof String) {
+						companyCode = Integer.valueOf((String) cellValue);
+					} else if (cellValue instanceof Double) {
+						companyCode = (Integer) cellValue;
+					}
+					if (cellValue != null && companyCode == 2040) {
 						ETLUtil.setCellValue(desCell, "X8", logger);
-					} else if (cellValue != null && (double) cellValue == 3040) {
+					} else if (cellValue != null && companyCode == 3040) {
 						ETLUtil.setCellValue(desCell, "XB", logger);
 					} else {
 						ETLUtil.setCellValue(desCell, "", logger);
@@ -332,9 +341,9 @@ public class ProjectDefinitionGenerator {
 					if (TargetProjectDefinitionColumnHeaders.POST1 == destinationHeader) {
 						Cell projectNoCell = projectTypeRow.getCell(
 								sourceColumnHeadersIndexMap.get(SourceProjectDefinitionColumnHeaders.PROJECTNO));
-						projectNo = projectNoCell.getStringCellValue().trim();
-						cellValue = projectNoCell.getStringCellValue().trim() + " - "
-								+ currentCell.getStringCellValue().trim();
+						projectNo = ETLUtil.getCellValueAsString(projectNoCell, logger);
+						cellValue = ETLUtil.getCellValueAsString(projectNoCell, logger) + " - "
+								+ ETLUtil.getCellValueAsString(currentCell, logger);
 					} else {
 						cellValue = ETLUtil.getCellValue(currentCell, logger);
 					}

@@ -116,7 +116,7 @@ public class NetworkActivityGenerator {
 			Iterator<Cell> cellIterator = currentRow.iterator();
 			while (cellIterator.hasNext()) {
 				Cell currentCell = cellIterator.next();
-				headers.add(currentCell.getStringCellValue().trim());
+				headers.add(ETLUtil.getCellValueAsString(currentCell, logger));
 			}
 			break;
 		}
@@ -163,9 +163,9 @@ public class NetworkActivityGenerator {
 			StringBuffer uniqueKey = new StringBuffer("");
 			for (Integer uniqueKeyIndex : uniqueKeyIndexes) {
 				if (costTypeIndex == uniqueKeyIndex) {
-					uniqueKey.append(currentRow.getCell(uniqueKeyIndex).getStringCellValue().trim());
+					uniqueKey.append(ETLUtil.getCellValueAsString(currentRow.getCell(uniqueKeyIndex), logger));
 				} else {
-					uniqueKey.append(currentRow.getCell(uniqueKeyIndex).getStringCellValue().trim());
+					uniqueKey.append(ETLUtil.getCellValueAsString(currentRow.getCell(uniqueKeyIndex), logger));
 				}
 			}
 			if (!uniqueKeys.contains(uniqueKey.toString())) {
@@ -190,16 +190,14 @@ public class NetworkActivityGenerator {
 
 			Object costType = ETLUtil.getCellValue(costTypeCell, logger);
 			CostTypeReferenceTable costTypeReference = null;
-			String projectNo = currentRow.getCell(
-					networkHeaderSourceHeaderColumnIndexMap.get(SourceNetworkHeaderColumnHeaders.PROJECTNO.toString()))
-					.getStringCellValue().trim();
-
-			String taskNo = currentRow.getCell(
-					networkHeaderSourceHeaderColumnIndexMap.get(SourceNetworkHeaderColumnHeaders.TASKNO.toString()))
-					.getStringCellValue().trim();
-			String altTaskNo = currentRow.getCell(
-					networkHeaderSourceHeaderColumnIndexMap.get(SourceNetworkHeaderColumnHeaders.ALT_TASKNO.toString()))
-					.getStringCellValue().trim();
+			String projectNo = ETLUtil.getCellValueAsString(currentRow.getCell(
+					networkHeaderSourceHeaderColumnIndexMap.get(SourceNetworkHeaderColumnHeaders.PROJECTNO.toString())),
+					logger);
+			String taskNo = ETLUtil.getCellValueAsString(currentRow.getCell(
+					networkHeaderSourceHeaderColumnIndexMap.get(SourceNetworkHeaderColumnHeaders.TASKNO.toString())),
+					logger);
+			String altTaskNo = ETLUtil.getCellValueAsString(currentRow.getCell(networkHeaderSourceHeaderColumnIndexMap
+					.get(SourceNetworkHeaderColumnHeaders.ALT_TASKNO.toString())), logger);
 
 			if (costType != null) {
 				costTypeReference = ETLUtil.getCostTypeReferenceTableByCostType().get(costType.toString());
@@ -236,11 +234,10 @@ public class NetworkActivityGenerator {
 			networkActivityCostTypeReferenceTable.setTaskNo(taskNo);
 			networkActivityCostTypeReferenceTable.setAltTaskNo(altTaskNo);
 			networkActivityCostTypeReferenceTable
-			.setCostType(
-					currentRow
+			.setCostType(ETLUtil.getCellValueAsString(currentRow
 					.getCell(networkHeaderSourceHeaderColumnIndexMap
-							.get(SourceNetworkHeaderColumnHeaders.COST_TYPE.toString()))
-					.getStringCellValue().trim());
+							.get(SourceNetworkHeaderColumnHeaders.COST_TYPE.toString())),
+					logger));
 
 			networkActivityCostTypeReferenceTable.setCostTypeDescription(costTypeReference.getCostTypeDescription());
 			networkActivityCostTypeReferenceTable
@@ -405,28 +402,30 @@ public class NetworkActivityGenerator {
 			while (networkTargetNonDuplicateSheetIterator.hasNext()) {
 				Row networkTargetNonDuplicateCurrentRow = networkTargetNonDuplicateSheetIterator.next();
 
-				String projectNo = networkTargetNonDuplicateCurrentRow
+				String projectNo = ETLUtil.getCellValueAsString(networkTargetNonDuplicateCurrentRow
 						.getCell(networkActivityNoDuplicateHeaderColumnIndexMap
-								.get(SourceNetworkActivityColumnHeaders.PROJECTNO.toString()))
-						.getStringCellValue().trim();
+								.get(SourceNetworkActivityColumnHeaders.PROJECTNO.toString())),
+						logger);
 
 				/*String taskNo = networkTargetNonDuplicateCurrentRow
 						.getCell(networkActivityNoDuplicateHeaderColumnIndexMap
 								.get(SourceNetworkActivityColumnHeaders.TASKNO.toString())).getStringCellValue();*/
-				String altTaskNo = networkTargetNonDuplicateCurrentRow
+				String altTaskNo = ETLUtil.getCellValueAsString(networkTargetNonDuplicateCurrentRow
 						.getCell(networkActivityNoDuplicateHeaderColumnIndexMap
-								.get(SourceNetworkActivityColumnHeaders.ALT_TASKNO.toString()))
-						.getStringCellValue().trim();
+								.get(SourceNetworkActivityColumnHeaders.ALT_TASKNO.toString())),
+						logger);
+
 				NetworkHeaderActivityReferenceTable networkHeaderActivityReferenceTable = ETLUtil
 						.getNetworkHeaderActivityReferenceTableByProjectTaskNo().get(projectNo + altTaskNo);
 
 				Row targetNetworkActivityRow = targetNetworkTargetSheet.createRow(targetRowCount);
 				for (TargetNetworkActivityColumnHeaders targetNetworkActivityColumnHeader : TargetNetworkActivityColumnHeaders
 						.getColumnHeadersByIndex()) {
-					String actualCostType = networkTargetNonDuplicateCurrentRow
+					String actualCostType = ETLUtil.getCellValueAsString(networkTargetNonDuplicateCurrentRow
 							.getCell(networkActivityNoDuplicateHeaderColumnIndexMap
-									.get(SourceNetworkActivityColumnHeaders.COST_TYPE_ACTUAL_DESCRIPTION.toString()))
-							.getStringCellValue().trim();
+									.get(SourceNetworkActivityColumnHeaders.COST_TYPE_ACTUAL_DESCRIPTION.toString())),
+							logger);
+
 					if (TargetNetworkActivityColumnHeaders.SERIAL == targetNetworkActivityColumnHeader) {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
@@ -437,11 +436,11 @@ public class NetworkActivityGenerator {
 					} else if (TargetNetworkActivityColumnHeaders.VORNR == targetNetworkActivityColumnHeader) {
 						Cell cell = targetNetworkActivityRow
 								.createCell(targetNetworkActivityColumnHeader.getColumnIndex() - 1);
-						ETLUtil.setCellValue(cell,
+						ETLUtil.setCellValue(cell, ETLUtil.getCellValueAsString(
 								networkTargetNonDuplicateCurrentRow
 								.getCell(networkActivityNoDuplicateHeaderColumnIndexMap
-										.get(SourceNetworkActivityColumnHeaders.VORNR.toString()))
-								.getStringCellValue().trim(),
+										.get(SourceNetworkActivityColumnHeaders.VORNR.toString())),
+								logger),
 								logger);
 					} else if (TargetNetworkActivityColumnHeaders.LTXA1 == targetNetworkActivityColumnHeader) {
 						Cell cell = targetNetworkActivityRow
@@ -534,7 +533,7 @@ public class NetworkActivityGenerator {
 								logger);
 						logger.debug("in generateWBStargetFile adding constant column  "
 								+ targetNetworkActivityColumnHeader.getColumnHeader()
-								+ desCell.getStringCellValue().trim());
+								+ ETLUtil.getCellValueAsString(desCell, logger));
 					}
 				}
 				targetRowCount++;

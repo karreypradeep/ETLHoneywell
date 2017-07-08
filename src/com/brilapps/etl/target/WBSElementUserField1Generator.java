@@ -107,7 +107,8 @@ public class WBSElementUserField1Generator {
 							.createCell(wbsElementUserField1ColumnHeader.getColumnIndex() - 1);
 					ETLUtil.setCellValue(desCell, destinationConstants.get(wbsElementUserField1ColumnHeader), logger);
 					logger.debug("in generateWBSElementUserField1TargetFile adding constant column  "
-							+ wbsElementUserField1ColumnHeader.getColumnHeader() + desCell.getStringCellValue().trim());
+							+ wbsElementUserField1ColumnHeader.getColumnHeader()
+							+ ETLUtil.getCellValueAsString(desCell, logger));
 				}
 			}
 		} catch (Exception e) {
