@@ -134,7 +134,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 		add(jButton6);
 		jButton6.addActionListener(this);
 
-		projectDefinitionJTextField
+		/*projectDefinitionJTextField
 				.setText("C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectHeader_MOCK2_Updated_LOAD.xlsx");
 		projectDefinitionSourceFile = new File(
 				"C:/Users/pkarrey.ORADEV/Documents/SAPOttawaProjectHeader_MOCK2_Updated_LOAD.xlsx");
@@ -150,7 +150,7 @@ public class ETLMainClass extends JFrame implements ActionListener {
 				"C:/Users/pkarrey.ORADEV/Documents/ProjectDefnitionReferenceTable.xls");
 
 		destinationFolderJTextField.setText("C:/Users/pkarrey.ORADEV/Documents");
-		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");
+		destinationFolder = new File("C:/Users/pkarrey.ORADEV/Documents");*/
 
 
 	}
